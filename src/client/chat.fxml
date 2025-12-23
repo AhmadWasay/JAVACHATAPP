@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="client.ChatController">
+
+    <top>
+        <HBox spacing="8">
+            <padding>
+                <Insets top="8" right="8" bottom="8" left="8"/>
+            </padding>
+
+            <Label text="Host:"/>
+            <TextField fx:id="hostField" promptText="localhost" prefWidth="120"/>
+            <Label text="Port:"/>
+            <TextField fx:id="portField" promptText="5555" prefWidth="80"/>
+            <Label text="Name:"/>
+            <TextField fx:id="nameField" promptText="YourName" prefWidth="120"/>
+            <Button fx:id="connectButton" text="Connect"/>
+            <Button fx:id="disconnectButton" text="Disconnect"/>
+            <Label fx:id="statusLabel" text="Disconnected" HBox.hgrow="ALWAYS" />
+        </HBox>
+    </top>
+
+    <center>
+        <SplitPane dividerPositions="0.75" orientation="HORIZONTAL">
+            <AnchorPane>
+                <TextArea fx:id="messageArea" editable="false" wrapText="true"
+                          AnchorPane.topAnchor="0" AnchorPane.leftAnchor="0"
+                          AnchorPane.rightAnchor="0" AnchorPane.bottomAnchor="0"/>
+            </AnchorPane>
+
+            <VBox spacing="6">
+                <padding>
+                    <Insets top="6" right="6" bottom="6" left="6"/>
+                </padding>
+
+                <Label text="Online Users"/>
+                <ListView fx:id="usersList" prefHeight="400" />
+                <Label text="Hints:"/>
+                <Label text="/pm username message  — private message" wrapText="true"/>
+                <Label text="/rename newName  — change your name" wrapText="true"/>
+                <Label text="/users — refresh user list" wrapText="true"/>
+            </VBox>
+        </SplitPane>
+    </center>
+
+    <bottom>
+        <HBox spacing="8">
+            <padding>
+                <Insets top="8" right="8" bottom="8" left="8"/>
+            </padding>
+
+            <TextField fx:id="inputField" promptText="Type message or command..." HBox.hgrow="ALWAYS"/>
+            <Button fx:id="sendButton" text="Send" />
+        </HBox>
+    </bottom>
+
+</BorderPane>

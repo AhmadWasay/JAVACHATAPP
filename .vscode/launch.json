@@ -1,0 +1,18 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Run Chat Client (JavaFX)",
+            "request": "launch",
+            "mainClass": "client.Main",
+            "vmArgs": "--module-path \"D:/javafx-sdk-25.0.1/lib\" --add-modules javafx.controls,javafx.fxml --enable-native-access=javafx.graphics"
+        },
+        {
+            "type": "java",
+            "name": "Run Chat Server",
+            "request": "launch",
+            "mainClass": "server.ChatServer"
+        }
+    ]
+}
