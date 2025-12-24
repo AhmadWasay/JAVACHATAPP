@@ -73,7 +73,10 @@ public class ChatServer {
         sb.append(Protocol.SERVER_PREFIX).append("USERLIST");
         synchronized (clients) {
             for (ClientHandler ch : clients) {
-                sb.append(" ").append(ch.getUsername());
+                // FIX: Only list users who have a name (Logged in)
+                if (ch.getUsername() != null) {
+                    sb.append(" ").append(ch.getUsername());
+                }
             }
         }
         broadcast(sb.toString(), null);

@@ -1,18 +1,36 @@
 .root {
-    -fx-font-family: "Segoe UI", system;
-    -fx-font-size: 13px;
+    -fx-font-family: "Segoe UI", "Arial";
 }
 
+/* The User List Sidebar */
+.list-view .list-cell {
+    -fx-background-color: white;
+    -fx-padding: 10 15;
+    -fx-border-color: #f0f2f5;
+    -fx-border-width: 0 0 1 0;
+    -fx-text-fill: #111b21;
+}
+
+.list-view .list-cell:filled:selected, .list-view .list-cell:filled:hover {
+    -fx-background-color: #f0f2f5;
+    -fx-text-fill: #111b21;
+}
+
+.list-view .list-cell:empty {
+    -fx-background-color: white;
+}
+
+/* Chat Area Text - trying to simulate message feel */
 .text-area {
-    -fx-control-inner-background: #ffffff;
-    -fx-background-insets: 0;
+    -fx-highlight-fill: #00a884; 
+    -fx-highlight-text-fill: white; 
 }
 
-.button {
-    -fx-cursor: hand;
-    -fx-padding: 6 10;
+/* Scrollbars */
+.scroll-bar:vertical, .scroll-bar:horizontal {
+    -fx-background-color: transparent;
 }
-
-.list-view {
-    -fx-background-color: #f7f7f7;
+.scroll-bar .thumb {
+    -fx-background-color: #cccccc;
+    -fx-background-radius: 5em;
 }

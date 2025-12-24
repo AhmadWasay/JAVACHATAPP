@@ -32,12 +32,7 @@ public class ChatController {
         this.nameField.setText(username);
         this.password = password;
         this.nameField.setEditable(false);
-        try {
-            this.connect();
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+        this.connect();
     }
 
     @FXML
@@ -66,32 +61,42 @@ public class ChatController {
         // ... (keep the rest of your button setup code here)
         sendButton.setOnAction(e -> sendMessage());
         connectButton.setOnAction(e -> {
-            try {
-                connect();
-            } catch (IOException e1) {
-                // TODO Auto-generated catch block
-                e1.printStackTrace();
-            }
+            connect();
         });
         disconnectButton.setOnAction(e -> disconnect());
         disconnectButton.setDisable(true);
     }
 
-    private void connect() throws IOException {
-        String host = hostField.getText().isEmpty() ? "localhost" : hostField.getText().trim();
-        int port = portField.getText().isEmpty() ? 5555 : Integer.parseInt(portField.getText().trim());
+    private void connect() {
+        // 1. Handle hidden fields safely (Default to localhost:5555)
+        String host = "localhost";
+        int port = 5555;
+        
+        // Only read fields if they actually have text
+        if (hostField != null && !hostField.getText().isEmpty()) {
+            host = hostField.getText().trim();
+        }
+        if (portField != null && !portField.getText().isEmpty()) {
+            try {
+                port = Integer.parseInt(portField.getText().trim());
+            } catch (NumberFormatException ignored) {}
+        }
+
         String name = nameField.getText().isEmpty() ? "User" : nameField.getText().trim();
-        client = new ChatClient(host, port, name, password, this::onRawMessage);
+        
         appendSystem("Connecting to " + host + ":" + port + "...");
 
         try {
-            // Pass 'this::onRawMessage' to handle incoming data
+            // 2. Initialize Client ONLY ONCE here
+            // Ensure 'password' is defined as a field in your ChatController class
             client = new ChatClient(host, port, name, password, this::onRawMessage);
+            
             connectButton.setDisable(true);
             disconnectButton.setDisable(false);
             statusLabel.setText("Connected as " + name);
         } catch (Exception e) {
             appendSystem("Failed to connect: " + e.getMessage());
+            e.printStackTrace(); // Helps check errors in the terminal
         }
     }
 
@@ -110,12 +115,7 @@ public class ChatController {
         this.nameField.setText(username);
         // We can disable editing since they are already logged in
         this.nameField.setEditable(false); 
-        try {
-            this.connect();
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } // Auto-click the connect button
+        this.connect();
     }
 
     private void sendMessage() {
