@@ -41,21 +41,21 @@ public class ClientHandler implements Runnable {
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
             // First line expected: CONNECT desiredName
+            // First line expected: C:CONNECT desiredName
             String first = in.readLine();
-            if (first != null && first.startsWith(Protocol.CLIENT_PREFIX + "CONNECT")) {
-                String[] parts = first.split(" ", 3);
-                String desired = parts.length >= 2 ? parts[1].trim() : "User";
+            // We construct the expected prefix dynamically to be safe
+            String expectedPrefix = Protocol.CLIENT_PREFIX + "CONNECT";
+
+            if (first != null && first.startsWith(expectedPrefix)) {
+                // ROBUST FIX: Ignore spaces/splits. Just take everything after "CONNECT".
+                String desired = first.substring(expectedPrefix.length()).trim();
+                if (desired.isEmpty()) desired = "User"; // Fallback if no name provided
+                
                 username = server.resolveUniqueName(desired);
-                sendMessage(Protocol.SERVER_PREFIX + username + " CONNECTED!");
+                
+                sendMessage(Protocol.SERVER_PREFIX + "CONNECTED " + username);
                 server.broadcast(Protocol.SERVER_PREFIX + "USER_JOINED " + username, this);
                 server.broadcastUserList();
-                // ... inside run(), after successful connection ...
-
-                // --- NEW: Send History ---
-                for (String oldMsg : server.getHistory()) {
-                    sendMessage(oldMsg);
-                }
-                // -------------------------
             } else {
                 sendMessage(Protocol.SERVER_PREFIX + "ERROR Missing CONNECT");
                 close();

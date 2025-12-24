@@ -21,8 +21,8 @@ public class ChatClient {
         // --- FIX 1: Send the correct Handshake ---
         // Was: out.println(username);
         // Now: C:CONNECT <username>
+        // Ensure there is NO SPACE between Protocol.CLIENT_PREFIX and "CONNECT"
         out.println(Protocol.CLIENT_PREFIX + "CONNECT " + username);
-
         Thread readerThread = new Thread(this::listen);
         readerThread.setDaemon(true);
         readerThread.start();
