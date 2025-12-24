@@ -8,12 +8,17 @@ import javafx.stage.Stage;
 public class Main extends Application {
     @Override
     public void start(Stage stage) throws Exception {
-        FXMLLoader fxml = new FXMLLoader(getClass().getResource("chat.fxml"));
+        // CHANGED: Load login.fxml instead of chat.fxml
+        FXMLLoader fxml = new FXMLLoader(getClass().getResource("login.fxml"));
         Scene scene = new Scene(fxml.load());
-        scene.getStylesheets().add(getClass().getResource("styles.css").toExternalForm());
-        stage.setTitle("JavaFX Chat Client");
+        
+        // Use the same styles
+        if (getClass().getResource("styles.css") != null) {
+            scene.getStylesheets().add(getClass().getResource("styles.css").toExternalForm());
+        }
+        
+        stage.setTitle("JavaChat - Login");
         stage.setScene(scene);
-        stage.setMinWidth(600);
         stage.show();
     }
 

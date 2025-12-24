@@ -3,6 +3,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "ServerMain",
+            "request": "launch",
+            "mainClass": "server.ServerMain",
+            "projectName": "JavaChatApp_98f0a3cb"
+        },
+        {
+            "type": "java",
             "name": "Run Chat Client (JavaFX)",
             "request": "launch",
             "mainClass": "client.Main",

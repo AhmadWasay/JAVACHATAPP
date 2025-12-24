@@ -11,18 +11,25 @@ public class ChatClient {
     private final BufferedReader in;
     private final Consumer<String> messageHandler;
 
-    public ChatClient(String host, int port, String username, Consumer<String> messageHandler) throws IOException {
+    public ChatClient(String host, int port, String username, String password, Consumer<String> messageHandler) throws IOException {
         this.messageHandler = messageHandler;
 
         socket = new Socket(host, port);
         out = new PrintWriter(socket.getOutputStream(), true);
         in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
+        out.println(Protocol.CLIENT_PREFIX + Protocol.LOGIN + " " + username + " " + password);
+        
         // --- FIX 1: Send the correct Handshake ---
         // Was: out.println(username);
         // Now: C:CONNECT <username>
-        // Ensure there is NO SPACE between Protocol.CLIENT_PREFIX and "CONNECT"
-        out.println(Protocol.CLIENT_PREFIX + "CONNECT " + username);
+        // Was: out.println(Protocol.CLIENT_PREFIX + "CONNECT " + username);
+        // Change to:
+        // NOTE: For now, we assume the user already authenticated in LoginController.
+        // However, since ChatClient opens a NEW socket, the server expects authentication AGAIN.
+        // We need to pass the password to ChatClient to re-authenticate silently.
+        
+        // Simpler Hack for now:
+        // Let's modify the Protocol.LOGIN to allow a "session resumption" or just re-send the password.
         Thread readerThread = new Thread(this::listen);
         readerThread.setDaemon(true);
         readerThread.start();

@@ -1,6 +1,8 @@
 package client;
 
 import common.Protocol;
+
+import java.io.IOException;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import javafx.application.Platform;
@@ -23,6 +25,20 @@ public class ChatController {
     @FXML private Label statusLabel;
 
     private ChatClient client;
+
+    private String password; // Add this field
+
+    public void setAutoLogin(String username, String password) {
+        this.nameField.setText(username);
+        this.password = password;
+        this.nameField.setEditable(false);
+        try {
+            this.connect();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
 
     @FXML
     public void initialize() {
@@ -49,21 +65,28 @@ public class ChatController {
         
         // ... (keep the rest of your button setup code here)
         sendButton.setOnAction(e -> sendMessage());
-        connectButton.setOnAction(e -> connect());
+        connectButton.setOnAction(e -> {
+            try {
+                connect();
+            } catch (IOException e1) {
+                // TODO Auto-generated catch block
+                e1.printStackTrace();
+            }
+        });
         disconnectButton.setOnAction(e -> disconnect());
         disconnectButton.setDisable(true);
     }
 
-    private void connect() {
+    private void connect() throws IOException {
         String host = hostField.getText().isEmpty() ? "localhost" : hostField.getText().trim();
         int port = portField.getText().isEmpty() ? 5555 : Integer.parseInt(portField.getText().trim());
         String name = nameField.getText().isEmpty() ? "User" : nameField.getText().trim();
-
+        client = new ChatClient(host, port, name, password, this::onRawMessage);
         appendSystem("Connecting to " + host + ":" + port + "...");
 
         try {
             // Pass 'this::onRawMessage' to handle incoming data
-            client = new ChatClient(host, port, name, this::onRawMessage);
+            client = new ChatClient(host, port, name, password, this::onRawMessage);
             connectButton.setDisable(true);
             disconnectButton.setDisable(false);
             statusLabel.setText("Connected as " + name);
@@ -80,6 +103,19 @@ public class ChatController {
         usersList.getItems().clear();
         statusLabel.setText("Disconnected");
         appendSystem("Disconnected.");
+    }
+
+    // Call this from LoginController to pass data
+    public void setAutoLogin(String username) {
+        this.nameField.setText(username);
+        // We can disable editing since they are already logged in
+        this.nameField.setEditable(false); 
+        try {
+            this.connect();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } // Auto-click the connect button
     }
 
     private void sendMessage() {

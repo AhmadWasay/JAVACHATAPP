@@ -1,31 +1,22 @@
 package server;
 
 import common.Protocol;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
 
-/**
- * Handles one client connection
- */
 public class ClientHandler implements Runnable {
     private final Socket socket;
     private final ChatServer server;
     private PrintWriter out;
     private BufferedReader in;
-    private String username = "Anonymous";
+    private String username = null;
 
     public ClientHandler(Socket socket, ChatServer server) {
         this.socket = socket;
         this.server = server;
     }
 
-    public String getUsername() {
-        return username;
-    }
+    public String getUsername() { return username; }
 
     public void sendMessage(String msg) {
         if (out != null) {
@@ -40,91 +31,104 @@ public class ClientHandler implements Runnable {
             out = new PrintWriter(socket.getOutputStream(), true);
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-            // First line expected: CONNECT desiredName
-            // First line expected: C:CONNECT desiredName
-            String first = in.readLine();
-            // We construct the expected prefix dynamically to be safe
-            String expectedPrefix = Protocol.CLIENT_PREFIX + "CONNECT";
+            // --- PHASE 1: AUTHENTICATION LOOP ---
+            // The user cannot chat until they pass this loop
+            boolean authenticated = false;
+            while (!authenticated) {
+                String line = in.readLine();
+                if (line == null) return; // Client disconnected
 
-            if (first != null && first.startsWith(expectedPrefix)) {
-                // ROBUST FIX: Ignore spaces/splits. Just take everything after "CONNECT".
-                String desired = first.substring(expectedPrefix.length()).trim();
-                if (desired.isEmpty()) desired = "User"; // Fallback if no name provided
-                
-                username = server.resolveUniqueName(desired);
-                
-                sendMessage(Protocol.SERVER_PREFIX + "CONNECTED " + username);
-                server.broadcast(Protocol.SERVER_PREFIX + "USER_JOINED " + username, this);
-                server.broadcastUserList();
-            } else {
-                sendMessage(Protocol.SERVER_PREFIX + "ERROR Missing CONNECT");
-                close();
-                return;
+                if (line.startsWith(Protocol.CLIENT_PREFIX + Protocol.LOGIN)) {
+                    // Format: C:LOGIN <user> <pass>
+                    authenticated = handleLogin(line);
+                } else if (line.startsWith(Protocol.CLIENT_PREFIX + Protocol.REGISTER)) {
+                    // Format: C:REGISTER <user> <pass>
+                    authenticated = handleRegister(line);
+                } else {
+                    sendMessage(Protocol.SERVER_PREFIX + "ERROR Please login first");
+                }
             }
+
+            // --- PHASE 2: MAIN CHAT LOOP ---
+            sendMessage(Protocol.SERVER_PREFIX + Protocol.LOGIN_SUCCESS + " " + username);
+            server.broadcast(Protocol.SERVER_PREFIX + "USER_JOINED " + username, this);
+            server.broadcastUserList();
+
+            // Load offline/history messages (Optional - we can add this later)
+            // loadChatHistory(); 
 
             String line;
             while ((line = in.readLine()) != null) {
                 if (line.startsWith(Protocol.CLIENT_PREFIX)) {
-                    // Commands prefixed by CLIENT:
                     handleClientCommand(line.substring(Protocol.CLIENT_PREFIX.length()).trim());
                 } else {
-                    // Plain chat message -> broadcast
+                    // Chat message: Save to DB then Broadcast
+                    // The server now knows WHO sent it (this.username)
+                    // For public chat, we can set receiver as "ALL"
+                    DatabaseManager.saveMessage(this.username, "ALL", line); 
                     server.broadcast(Protocol.SERVER_PREFIX + "MSG " + username + " " + line, this);
                 }
             }
         } catch (IOException e) {
-            // client disconnected or error
+            System.err.println("Client disconnected: " + username);
         } finally {
             close();
         }
     }
 
-    private void handleClientCommand(String cmdLine) {
-        if (cmdLine.startsWith("PM ")) {
-            // PM <target> <message>
-            String[] parts = cmdLine.split(" ", 3);
-            if (parts.length >= 3) {
-                String target = parts[1];
-                String msg = parts[2];
-                boolean found = false;
-                synchronized (server) {
-                    for (ClientHandler ch : server.clients) {
-                        if (ch.getUsername().equalsIgnoreCase(target)) {
-                            ch.sendMessage(Protocol.SERVER_PREFIX + "PM " + username + " " + msg);
-                            found = true;
-                            break;
-                        }
-                    }
-                }
-                if (!found) {
-                    sendMessage(Protocol.SERVER_PREFIX + "ERROR UserNotFound " + target);
-                }
-            } else {
-                sendMessage(Protocol.SERVER_PREFIX + "ERROR BadPM");
-            }
-        } else if (cmdLine.equals("USERS")) {
-            server.broadcastUserList();
-        } else if (cmdLine.startsWith("RENAME ")) {
-            String[] p = cmdLine.split(" ", 2);
-            if (p.length == 2) {
-                String newName = server.resolveUniqueName(p[1].trim());
-                String old = this.username;
-                this.username = newName;
-                sendMessage(Protocol.SERVER_PREFIX + "RENAMED " + old + " " + newName);
-                server.broadcast(Protocol.SERVER_PREFIX + "USER_RENAMED " + old + " " + newName, this);
-                server.broadcastUserList();
-            }
-        } else if (cmdLine.equals("QUIT")) {
-            close();
+    private boolean handleLogin(String line) {
+        String[] parts = line.split(" ", 3); // C:LOGIN user pass
+        if (parts.length < 3) return false;
+        
+        String user = parts[1];
+        String pass = parts[2];
+
+        if (DatabaseManager.checkLogin(user, pass)) {
+            this.username = user;
+            return true;
         } else {
-            sendMessage(Protocol.SERVER_PREFIX + "ERROR UnknownCmd");
+            sendMessage(Protocol.SERVER_PREFIX + Protocol.LOGIN_FAIL);
+            return false;
         }
     }
 
+    private boolean handleRegister(String line) {
+        String[] parts = line.split(" ", 3);
+        if (parts.length < 3) return false;
+        
+        String user = parts[1];
+        String pass = parts[2];
+
+        if (DatabaseManager.registerUser(user, pass)) {
+            this.username = user;
+            // Auto-login after register? Or ask them to login? 
+            // Let's just log them in for convenience.
+            return true;
+        } else {
+            sendMessage(Protocol.SERVER_PREFIX + "ERROR Username taken");
+            return false;
+        }
+    }
+
+    private void handleClientCommand(String cmdLine) {
+        // ... (Keep your existing PM / RENAME / QUIT logic here) ...
+        // Important: When handling PM, save to DB!
+        if (cmdLine.startsWith("PM ")) {
+             String[] parts = cmdLine.split(" ", 3);
+             if (parts.length >= 3) {
+                 String target = parts[1];
+                 String msg = parts[2];
+                 // Save private message to DB
+                 DatabaseManager.saveMessage(this.username, target, msg);
+                 
+                 // ... rest of your PM logic ...
+             }
+        }
+        // ...
+    }
+
     private void close() {
-        try {
-            socket.close();
-        } catch (IOException ignored) {}
+        try { socket.close(); } catch (IOException ignored) {}
         server.removeClient(this);
     }
 }
