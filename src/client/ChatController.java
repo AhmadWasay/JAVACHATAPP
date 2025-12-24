@@ -2,7 +2,6 @@ package client;
 
 import common.Protocol;
 
-import java.io.IOException;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import javafx.application.Platform;
