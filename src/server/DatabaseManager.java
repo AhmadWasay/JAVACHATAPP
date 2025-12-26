@@ -84,30 +84,51 @@ public class DatabaseManager {
      * This fetches messages where (sender=A AND receiver=B) OR (sender=B AND receiver=A)
      * Ordered by time.
      */
-    public static List<String> getChatHistory(String user1, String user2) {
-        List<String> history = new ArrayList<>();
-        String sql = "SELECT sender, content, timestamp FROM messages " +
-                     "WHERE (sender = ? AND receiver = ?) OR (sender = ? AND receiver = ?) " +
-                     "ORDER BY timestamp ASC";
+    // Add this to DatabaseManager.java
+    public static java.util.List<String> getChatHistory(String username) {
+        java.util.List<String> history = new java.util.ArrayList<>();
+        
+        // Query: Get messages where:
+        // 1. Receiver is 'ALL' (Public chat)
+        // 2. Receiver is ME (Private msg to me)
+        // 3. Sender is ME (Private msg I sent)
+        String sql = "SELECT sender, receiver, content, timestamp FROM messages " +
+                     "WHERE receiver = 'ALL' OR receiver = ? OR sender = ? " +
+                     "ORDER BY timestamp DESC LIMIT 50"; // Get newest 50, then we reverse them
 
-        try (Connection conn = getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (java.sql.Connection conn = getConnection();
+             java.sql.PreparedStatement pstmt = conn.prepareStatement(sql)) {
             
-            pstmt.setString(1, user1);
-            pstmt.setString(2, user2);
-            pstmt.setString(3, user2); // Flip for the OR condition
-            pstmt.setString(4, user1);
+            pstmt.setString(1, username);
+            pstmt.setString(2, username);
             
-            ResultSet rs = pstmt.executeQuery();
+            java.sql.ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
-                String sender = rs.getString("sender");
-                String content = rs.getString("content");
-                // Format: "Alice: Hello there"
-                history.add(sender + ": " + content);
+                String s = rs.getString("sender");
+                String r = rs.getString("receiver");
+                String msg = rs.getString("content");
+                
+                // Format the message so the Client understands it
+                if (r.equals("ALL")) {
+                    // Public: MSG Sender Content
+                    history.add("MSG " + s + " " + msg);
+                } else {
+                    // Private
+                    if (s.equals(username)) {
+                        // I sent it: MSG Me -> Receiver: Content
+                        history.add("MSG Me -> " + r + ": " + msg);
+                    } else {
+                        // I received it: MSG Sender (Private): Content
+                        history.add("MSG " + s + " (Private): " + msg);
+                    }
+                }
             }
-        } catch (SQLException e) {
+        } catch (java.sql.SQLException e) {
             e.printStackTrace();
         }
+        
+        // The query gave us Newest -> Oldest. We want Oldest -> Newest for chat.
+        java.util.Collections.reverse(history);
         return history;
     }
 }

@@ -82,6 +82,21 @@ public class ChatServer {
         broadcast(sb.toString(), null);
     }
 
+    // Add this method to ChatServer.java
+    public boolean sendPrivateMessage(String senderName, String targetName, String message) {
+        synchronized (clients) {
+            for (ClientHandler ch : clients) {
+                // Check if this is the user we are looking for
+                if (ch.getUsername() != null && ch.getUsername().equalsIgnoreCase(targetName)) {
+                    // Send the message with a "(Private)" tag so they know it's a whisper
+                    ch.sendMessage(Protocol.SERVER_PREFIX + "MSG " + senderName + " (Private): " + message);
+                    return true; // Found and sent
+                }
+            }
+        }
+        return false; // User not online
+    }
+
     // Check username uniqueness and return a resolved unique name
     public String resolveUniqueName(String desired) {
         synchronized (clients) {

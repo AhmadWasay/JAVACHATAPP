@@ -1,36 +1,61 @@
 .root {
     -fx-font-family: "Segoe UI", "Arial";
+    -fx-base: #ffffff; /* Global white base */
 }
 
-/* The User List Sidebar */
+/* SIDEBAR: User List */
+.list-view {
+    -fx-background-color: white;
+    -fx-border-color: #e0e0e0;
+    -fx-border-width: 0 1 0 0;
+}
+
 .list-view .list-cell {
     -fx-background-color: white;
-    -fx-padding: 10 15;
-    -fx-border-color: #f0f2f5;
+    -fx-padding: 12 15;
+    -fx-border-color: #f5f5f5;
     -fx-border-width: 0 0 1 0;
-    -fx-text-fill: #111b21;
+    -fx-text-fill: #333333;
 }
 
-.list-view .list-cell:filled:selected, .list-view .list-cell:filled:hover {
-    -fx-background-color: #f0f2f5;
-    -fx-text-fill: #111b21;
+/* Hover effect: Very light blue */
+.list-view .list-cell:filled:hover {
+    -fx-background-color: #E3F2FD; 
+    -fx-cursor: hand;
 }
 
-.list-view .list-cell:empty {
-    -fx-background-color: white;
+/* Selected User: Solid Blue */
+.list-view .list-cell:filled:selected {
+    -fx-background-color: #2196F3;
+    -fx-text-fill: white;
 }
 
-/* Chat Area Text - trying to simulate message feel */
+/* CHAT AREA */
 .text-area {
-    -fx-highlight-fill: #00a884; 
+    /* Background of the chat scroll area */
+    -fx-control-inner-background: #F5F7FA; 
+    -fx-background-insets: 0;
+    -fx-highlight-fill: #2196F3; 
     -fx-highlight-text-fill: white; 
 }
 
-/* Scrollbars */
-.scroll-bar:vertical, .scroll-bar:horizontal {
+/* BUTTONS */
+.button {
+    -fx-cursor: hand;
+}
+
+/* Update these sections in styles.css */
+
+.scroll-pane {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+}
+
+.scroll-pane .viewport {
     -fx-background-color: transparent;
 }
-.scroll-bar .thumb {
-    -fx-background-color: #cccccc;
-    -fx-background-radius: 5em;
+
+/* Ensure the bubbles look sharp */
+.label {
+    -fx-font-family: "Segoe UI Emoji", "Arial";
 }

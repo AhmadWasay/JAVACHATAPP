@@ -38,39 +38,44 @@ public class LoginController {
             return;
         }
 
-        // Run network operation in a background thread to keep UI responsive
+        // Disable buttons to prevent double-clicking
+        loginButton.setDisable(true);
+        registerButton.setDisable(true);
+
         new Thread(() -> {
             try {
-                // 1. Open a temporary connection to check credentials
                 Socket socket = new Socket(HOST, PORT);
                 PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
                 BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-                // 2. Send Command: C:LOGIN user pass
                 String command = isLogin ? Protocol.LOGIN : Protocol.REGISTER;
                 out.println(Protocol.CLIENT_PREFIX + command + " " + user + " " + pass);
 
-                // 3. Read Response
-                String response = in.readLine(); // Expecting "S:LOGIN_SUCCESS <user>"
+                String response = in.readLine(); 
                 
                 Platform.runLater(() -> {
                     if (response != null && response.startsWith(Protocol.SERVER_PREFIX + Protocol.LOGIN_SUCCESS)) {
-                        // Success! Close this temp socket and open the main Chat UI
                         try {
-                            socket.close(); // We close this because ChatClient will make its own robust connection
-                            openChatScene(user);
+                            socket.close(); 
+                            openChatScene(user, pass); // <--- FIXED: Passing both User and Pass
                         } catch (IOException ex) {
                             showError("Error switching scenes.");
                         }
                     } else {
-                        // Failure (User taken or Wrong password)
                         showError(isLogin ? "Invalid username or password." : "Username already exists.");
                         try { socket.close(); } catch (IOException ignored) {}
+                        // Re-enable buttons on failure
+                        loginButton.setDisable(false);
+                        registerButton.setDisable(false);
                     }
                 });
 
             } catch (IOException e) {
-                Platform.runLater(() -> showError("Cannot connect to server."));
+                Platform.runLater(() -> {
+                    showError("Cannot connect to server.");
+                    loginButton.setDisable(false);
+                    registerButton.setDisable(false);
+                });
             }
         }).start();
     }
@@ -80,17 +85,15 @@ public class LoginController {
         errorLabel.setText(msg);
     }
 
-    private void openChatScene(String username) throws IOException {
-        // Load the main chat window
+    // UPDATED METHOD: Accepts password
+    private void openChatScene(String username, String password) throws IOException {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("chat.fxml"));
         Parent root = loader.load();
 
-        // Get the ChatController and tell it to auto-connect
         ChatController controller = loader.getController();
-        controller.setAutoLogin(username); // <--- We will add this method next
-        // Capture password from field before clearing or changing scenes
-        String pass = passField.getText().trim(); 
-        controller.setAutoLogin(username, pass);
+        // Pass both credentials to the ChatController
+        controller.setAutoLogin(username, password); 
+
         Stage stage = (Stage) loginButton.getScene().getWindow();
         stage.setScene(new Scene(root));
         stage.setTitle("JavaChat - " + username);

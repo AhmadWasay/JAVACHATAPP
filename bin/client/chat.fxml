@@ -17,7 +17,7 @@
 
     <left>
         <VBox spacing="0" prefWidth="250" style="-fx-background-color: #ffffff; -fx-border-color: #e0e0e0; -fx-border-width: 0 1 0 0;">
-            <HBox alignment="CENTER_LEFT" style="-fx-background-color: #00a884; -fx-padding: 15;">
+            <HBox alignment="CENTER_LEFT" style="-fx-background-color: #2196F3; -fx-padding: 15;">
                 <Label text="Chats" textFill="WHITE">
                     <font>
                         <Font name="Segoe UI Bold" size="16.0" />
@@ -30,13 +30,13 @@
     </left>
 
     <center>
-        <VBox style="-fx-background-color: #efeae2;">
-            <HBox alignment="CENTER_LEFT" style="-fx-background-color: #f0f2f5; -fx-padding: 10; -fx-border-color: #d1d7db; -fx-border-width: 0 0 1 0;">
-                 <Label fx:id="statusLabel" text="Connected" textFill="#54656f">
+        <VBox style="-fx-background-color: #efeae2;"> <HBox alignment="CENTER_LEFT" style="-fx-background-color: #2196F3; -fx-padding: 10; -fx-border-color: #1976D2; -fx-border-width: 0 0 1 0;">
+                 <Label fx:id="statusLabel" text="Connected" textFill="WHITE">
                     <font>
                         <Font name="Segoe UI Bold" size="14.0" />
                     </font>
                  </Label>
+                 
                  <TextField fx:id="nameField" visible="false" managed="false"/>
                  <TextField fx:id="hostField" visible="false" managed="false"/>
                  <TextField fx:id="portField" visible="false" managed="false"/>
@@ -44,14 +44,18 @@
                  <Button fx:id="disconnectButton" visible="false" managed="false"/>
             </HBox>
 
-            <TextArea fx:id="messageArea" editable="false" wrapText="true" VBox.vgrow="ALWAYS" 
-                      style="-fx-control-inner-background: #efeae2; -fx-background-insets: 0; -fx-font-family: 'Segoe UI Emoji'; -fx-font-size: 14px;"/>
+            <javafx.scene.control.ScrollPane fx:id="scrollPane" fitToWidth="true" VBox.vgrow="ALWAYS" 
+                      style="-fx-background: #efeae2; -fx-border-color: transparent;">
+                <content>
+                    <VBox fx:id="chatBox" spacing="10" style="-fx-background-color: #efeae2; -fx-padding: 15;" />
+                </content>
+            </javafx.scene.control.ScrollPane>
 
-            <HBox spacing="10" style="-fx-background-color: #f0f2f5; -fx-padding: 10;">
-                <TextField fx:id="inputField" promptText="Type a message" HBox.hgrow="ALWAYS" 
-                           style="-fx-background-radius: 20; -fx-border-radius: 20; -fx-padding: 8 15; -fx-background-color: white;"/>
+            <HBox spacing="10" style="-fx-background-color: #f0f2f5; -fx-padding: 10; -fx-border-color: #d1d7db; -fx-border-width: 1 0 0 0;">
+                <TextField fx:id="inputField" promptText="Type a message..." HBox.hgrow="ALWAYS" 
+                           style="-fx-background-radius: 20; -fx-border-radius: 20; -fx-padding: 10 15; -fx-background-color: white;"/>
                 <Button fx:id="sendButton" text="➤" 
-                        style="-fx-background-color: transparent; -fx-text-fill: #54656f; -fx-font-size: 18px; -fx-cursor: hand;"/>
+                        style="-fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-size: 14px; -fx-cursor: hand; -fx-background-radius: 20;"/>
             </HBox>
         </VBox>
     </center>

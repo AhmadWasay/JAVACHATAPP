@@ -1,46 +1,52 @@
 package client;
 
 import common.Protocol;
-
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import javafx.application.Platform;
+import javafx.geometry.Pos;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import javafx.scene.input.KeyCode;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 
 public class ChatController {
 
-    @FXML private TextArea messageArea;
+    // --- CHANGED: UI Components for Bubbles ---
+    @FXML private VBox chatBox;         // The container for bubbles
+    @FXML private ScrollPane scrollPane; // The scroller
+    // ------------------------------------------
+
     @FXML private TextField inputField;
     @FXML private ListView<String> usersList;
     @FXML private Button sendButton;
-    @FXML private TextField hostField;
-    @FXML private TextField portField;
     @FXML private TextField nameField;
+    @FXML private Label statusLabel;
+    
+    @FXML private TextField hostField; 
+    @FXML private TextField portField;
     @FXML private Button connectButton;
     @FXML private Button disconnectButton;
-    @FXML private Label statusLabel;
 
     private ChatClient client;
-
-    private String password; // Add this field
+    private String password;
 
     public void setAutoLogin(String username, String password) {
         this.nameField.setText(username);
         this.password = password;
-        this.nameField.setEditable(false);
-        this.connect();
+        this.connect(); 
     }
 
     @FXML
     public void initialize() {
-        messageArea.setEditable(false);
-        messageArea.setWrapText(true);
+        // Auto-scroll to bottom when new messages arrive
+        chatBox.heightProperty().addListener((observable, oldValue, newValue) -> {
+            scrollPane.setVvalue(1.0); 
+        });
 
-        // Feature: Click-to-PM
-        // When a user clicks a name in the list, auto-fill the input field
         usersList.setOnMouseClicked(event -> {
             String selectedUser = usersList.getSelectionModel().getSelectedItem();
             if (selectedUser != null) {
@@ -56,65 +62,36 @@ public class ChatController {
                 sendMessage();
             }
         });
-        
-        // ... (keep the rest of your button setup code here)
+
         sendButton.setOnAction(e -> sendMessage());
-        connectButton.setOnAction(e -> {
-            connect();
-        });
-        disconnectButton.setOnAction(e -> disconnect());
-        disconnectButton.setDisable(true);
     }
 
     private void connect() {
-        // 1. Handle hidden fields safely (Default to localhost:5555)
+        if (client != null) return; 
+
         String host = "localhost";
         int port = 5555;
-        
-        // Only read fields if they actually have text
-        if (hostField != null && !hostField.getText().isEmpty()) {
-            host = hostField.getText().trim();
-        }
-        if (portField != null && !portField.getText().isEmpty()) {
-            try {
-                port = Integer.parseInt(portField.getText().trim());
-            } catch (NumberFormatException ignored) {}
-        }
+        String name = nameField.getText().trim();
 
-        String name = nameField.getText().isEmpty() ? "User" : nameField.getText().trim();
-        
-        appendSystem("Connecting to " + host + ":" + port + "...");
+        // Add a system label instead of text log
+        addSystemMessage("Connecting to " + host + ":" + port + "...");
 
         try {
-            // 2. Initialize Client ONLY ONCE here
-            // Ensure 'password' is defined as a field in your ChatController class
             client = new ChatClient(host, port, name, password, this::onRawMessage);
-            
-            connectButton.setDisable(true);
-            disconnectButton.setDisable(false);
             statusLabel.setText("Connected as " + name);
         } catch (Exception e) {
-            appendSystem("Failed to connect: " + e.getMessage());
-            e.printStackTrace(); // Helps check errors in the terminal
+            addSystemMessage("Failed to connect: " + e.getMessage());
         }
     }
 
-    private void disconnect() {
+    public void disconnect() {
         if (client != null) client.close();
         client = null;
-        connectButton.setDisable(false);
-        disconnectButton.setDisable(true);
-        usersList.getItems().clear();
-        statusLabel.setText("Disconnected");
-        appendSystem("Disconnected.");
-    }
-
-    // Call this from LoginController to pass data
-    public void setAutoLogin(String username) {
-        this.nameField.setText(username);
-        // We can disable editing since they are already logged in
-        this.nameField.setEditable(false); 
-        this.connect();
+        Platform.runLater(() -> {
+            usersList.getItems().clear();
+            statusLabel.setText("Disconnected");
+            addSystemMessage("Disconnected.");
+        });
     }
 
     private void sendMessage() {
@@ -123,76 +100,108 @@ public class ChatController {
         if (text.isEmpty()) return;
 
         client.sendText(text);
-        appendMy(text);
+        addMessageBubble(text, true); // True = My Message
         inputField.clear();
     }
 
-    // --- LOGIC TO UPDATE SIDEBAR ---
-    private void onRawMessage(String msg) {
+    // --- THE BUBBLE FACTORY ---
+    private void addMessageBubble(String text, boolean isMyMessage) {
         Platform.runLater(() -> {
-            // 1. Check for the correct protocol header: "S:USERLIST"
-            String listPrefix = Protocol.SERVER_PREFIX + "USERLIST";
+            HBox container = new HBox();
             
-            if (msg.startsWith(listPrefix)) {
-                // Remove the header to get the names: " Alice Bob Charlie"
-                String rawNames = msg.substring(listPrefix.length()).trim();
-                
-                usersList.getItems().clear();
-                
-                if (!rawNames.isEmpty()) {
-                    // 2. The Server uses SPACE as a separator, not commas
-                    String[] names = rawNames.split(" ");
-                    usersList.getItems().addAll(Arrays.asList(names));
-                }
-                return; // Stop here, don't print the list logic to the chat area
-            }
-
-            // Normal chat messages
-            if (msg.startsWith("[SYSTEM]")) {
-                appendSystem(msg.substring(8).trim());
-            } else if (msg.startsWith(Protocol.SERVER_PREFIX)) {
-                // Remove the "S:" prefix for cleaner chat
-                String cleanMsg = msg.substring(Protocol.SERVER_PREFIX.length());
-                
-                // Optional: Check for specific server event types like "USER_JOINED"
-                if (cleanMsg.startsWith("USER_JOINED")) {
-                    String user = cleanMsg.split(" ")[1];
-                    appendSystem(user + " has joined the chat.");
-                } else if (cleanMsg.startsWith("USER_LEFT")) {
-                    String user = cleanMsg.split(" ")[1];
-                    appendSystem(user + " has left the chat.");
-                } else if (cleanMsg.startsWith("MSG")) {
-                    // Format: MSG <Username> <Message text...>
-                    // We parse this to make it look nice
-                    String[] parts = cleanMsg.split(" ", 3);
-                    if (parts.length >= 3) {
-                        appendRemote(parts[1] + ": " + parts[2]);
-                    } else {
-                        appendRemote(cleanMsg);
-                    }
-                } else {
-                    // Fallback for other server messages
-                    appendRemote(cleanMsg);
-                }
+            // 1. Create the Bubble
+            Label bubble = new Label(text);
+            bubble.setWrapText(true);
+            bubble.setMaxWidth(300); // Prevent extremely wide bubbles
+            
+            // 2. Style based on Sender
+            if (isMyMessage) {
+                container.setAlignment(Pos.CENTER_RIGHT); // Align Right
+                bubble.setStyle("-fx-background-color: #dcf8c6; -fx-background-radius: 10; -fx-padding: 10; -fx-font-size: 14px;");
             } else {
-                appendRemote(msg);
+                container.setAlignment(Pos.CENTER_LEFT); // Align Left
+                bubble.setStyle("-fx-background-color: #ffffff; -fx-background-radius: 10; -fx-padding: 10; -fx-font-size: 14px; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 1);");
             }
+            
+            // 3. Add Timestamp (Tiny text below or beside)
+            // For simplicity, we just put the label in the box for now. 
+            // To make it pro, we could use a VBox inside the bubble.
+
+            container.getChildren().add(bubble);
+            chatBox.getChildren().add(container);
         });
     }
 
-    private String getCurrentTime() {
-        return LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"));
+    private void addSystemMessage(String text) {
+        Platform.runLater(() -> {
+            HBox container = new HBox();
+            container.setAlignment(Pos.CENTER);
+            Label lbl = new Label(text);
+            lbl.setStyle("-fx-text-fill: gray; -fx-font-size: 11px; -fx-padding: 5; -fx-background-color: #e0e0e0; -fx-background-radius: 10;");
+            container.getChildren().add(lbl);
+            chatBox.getChildren().add(container);
+        });
     }
+    // ---------------------------
 
-    private void appendSystem(String s) { 
-        messageArea.appendText("[" + getCurrentTime() + "] [SYSTEM] " + s + "\n"); 
-    }
-    
-    private void appendMy(String s) { 
-        messageArea.appendText("[" + getCurrentTime() + "] [ME] " + s + "\n"); 
-    }
-    
-    private void appendRemote(String s) { 
-        messageArea.appendText("[" + getCurrentTime() + "] " + s + "\n"); 
+    private void onRawMessage(String msg) {
+        Platform.runLater(() -> {
+            String listPrefix = Protocol.SERVER_PREFIX + "USERLIST";
+            if (msg.startsWith(listPrefix)) {
+                String rawNames = msg.substring(listPrefix.length()).trim();
+                usersList.getItems().clear();
+                if (!rawNames.isEmpty()) {
+                    usersList.getItems().addAll(Arrays.asList(rawNames.split(" ")));
+                }
+                return;
+            }
+
+            if (msg.startsWith("[SYSTEM]")) {
+                addSystemMessage(msg.substring(8).trim());
+            } else if (msg.startsWith(Protocol.SERVER_PREFIX)) {
+                String cleanMsg = msg.substring(Protocol.SERVER_PREFIX.length());
+                
+                if (cleanMsg.startsWith("LOGIN_SUCCESS") || cleanMsg.startsWith("CONNECTED")) {
+                    // ignore
+                } else if (cleanMsg.startsWith("LOGIN_FAIL")) {
+                    addSystemMessage("Login Failed: Incorrect password or username taken.");
+                } else if (cleanMsg.startsWith("USER_JOINED")) {
+                    addSystemMessage(cleanMsg.split(" ")[1] + " joined.");
+                } else if (cleanMsg.startsWith("USER_LEFT")) {
+                    addSystemMessage(cleanMsg.split(" ")[1] + " left.");
+                } else if (cleanMsg.startsWith("MSG")) {
+                    // Format: MSG Sender Content  OR  MSG Sender (Private): Content
+                    String[] parts = cleanMsg.split(" ", 3);
+                    if (parts.length >= 3) {
+                        String sender = parts[1];
+                        String content = parts[2];
+                        
+                        // If I sent it (e.g. from history loading), show as MY bubble
+                        if (sender.equals("Me") || sender.equals(nameField.getText())) {
+                             // Handle "Me -> UserB: Hello" format from history
+                             if (content.startsWith("->")) {
+                                 // content looks like "-> Bob: Hello"
+                                 String realContent = content.substring(content.indexOf(":") + 1).trim();
+                                 addMessageBubble(realContent, true);
+                             } else {
+                                 addMessageBubble(content, true);
+                             }
+                        } else {
+                             // Remote message
+                             // If it's private, maybe make it yellow?
+                             if (content.startsWith("(Private):")) {
+                                 content = "🔒 " + content; // Add lock icon
+                             }
+                             // Show Name + Message
+                             addMessageBubble(sender + ":\n" + content, false);
+                        }
+                    }
+                } else {
+                    addSystemMessage(cleanMsg);
+                }
+            } else {
+                addSystemMessage(msg);
+            }
+        });
     }
 }
