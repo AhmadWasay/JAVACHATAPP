@@ -69,16 +69,36 @@ public class ChatServer {
     }
 
     public void broadcastUserList() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(Protocol.SERVER_PREFIX).append("USERLIST");
+        // 1. Get ALL users from Database
+        java.util.List<String> allUsers = DatabaseManager.getAllUsernames();
+        
+        // 2. Get ONLINE users (Convert to Lowercase for matching)
+        java.util.Set<String> onlineUsersLower = new java.util.HashSet<>();
         synchronized (clients) {
             for (ClientHandler ch : clients) {
-                // FIX: Only list users who have a name (Logged in)
                 if (ch.getUsername() != null) {
-                    sb.append(" ").append(ch.getUsername());
+                    // Store as lowercase: "abdullah"
+                    onlineUsersLower.add(ch.getUsername().toLowerCase());
                 }
             }
         }
+
+        // 3. Build the list string
+        StringBuilder sb = new StringBuilder();
+        sb.append(common.Protocol.SERVER_PREFIX).append("USERLIST");
+        
+        for (String user : allUsers) {
+            sb.append(" ");
+            sb.append(user); // Send the pretty name (e.g. "Abdullah")
+            sb.append(":");
+            
+            // 4. Check if the lowercase version exists in our online set
+            boolean isOnline = onlineUsersLower.contains(user.toLowerCase());
+            
+            sb.append(isOnline ? "1" : "0");
+        }
+
+        // 5. Broadcast to everyone
         broadcast(sb.toString(), null);
     }
 

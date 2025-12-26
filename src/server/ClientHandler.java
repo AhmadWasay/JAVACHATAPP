@@ -28,18 +28,21 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    private void handleCheckLogin(String line) {
-        String[] parts = line.split(" ", 3); // C:CHECK_LOGIN user pass
-        if (parts.length < 3) return;
-        
-        String user = parts[1];
+    private boolean handleLogin(String line) {
+        String[] parts = line.split(" ", 3);
+        if (parts.length < 3) return false;
+        String userRaw = parts[1];
         String pass = parts[2];
 
-        if (DatabaseManager.checkLogin(user, pass)) {
-            // Success: Tell client it's okay, but DON'T join the chat
-            sendMessage(Protocol.SERVER_PREFIX + Protocol.LOGIN_SUCCESS);
+        // NEW: Get the official name from DB
+        String officialName = DatabaseManager.checkLogin(userRaw, pass);
+
+        if (officialName != null) {
+            this.username = officialName; // Set the correct casing (e.g. "Abdullah")
+            return true;
         } else {
             sendMessage(Protocol.SERVER_PREFIX + Protocol.LOGIN_FAIL);
+            return false;
         }
     }
 
@@ -105,18 +108,16 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    private boolean handleLogin(String line) {
+    private void handleCheckLogin(String line) {
         String[] parts = line.split(" ", 3);
-        if (parts.length < 3) return false;
-        String user = parts[1];
+        if (parts.length < 3) return;
+        String userRaw = parts[1];
         String pass = parts[2];
 
-        if (DatabaseManager.checkLogin(user, pass)) {
-            this.username = user;
-            return true;
+        if (DatabaseManager.checkLogin(userRaw, pass) != null) {
+            sendMessage(Protocol.SERVER_PREFIX + Protocol.LOGIN_SUCCESS);
         } else {
             sendMessage(Protocol.SERVER_PREFIX + Protocol.LOGIN_FAIL);
-            return false;
         }
     }
 

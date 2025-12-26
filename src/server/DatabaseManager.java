@@ -40,27 +40,49 @@ public class DatabaseManager {
         }
     }
 
+    // Add this to DatabaseManager.java
+    public static java.util.List<String> getAllUsernames() {
+        java.util.List<String> users = new java.util.ArrayList<>();
+        String sql = "SELECT username FROM users ORDER BY username ASC";
+        
+        try (java.sql.Connection conn = getConnection();
+             java.sql.PreparedStatement pstmt = conn.prepareStatement(sql);
+             java.sql.ResultSet rs = pstmt.executeQuery()) {
+            
+            while (rs.next()) {
+                users.add(rs.getString("username"));
+            }
+        } catch (java.sql.SQLException e) {
+            e.printStackTrace();
+        }
+        return users;
+    }
+
     /**
      * Validate login credentials.
      */
-    public static boolean checkLogin(String username, String password) {
-        String sql = "SELECT password FROM users WHERE username = ?";
-        try (Connection conn = getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+    // Update this method in DatabaseManager.java
+    public static String checkLogin(String username, String password) {
+        // SQL: Find the user with this name (ignoring case) and password
+        // We select the 'username' column so we get the OFFICIAL casing (e.g. "Abdullah")
+        String sql = "SELECT username FROM users WHERE username = ? AND password = ?";
+        
+        try (java.sql.Connection conn = getConnection();
+             java.sql.PreparedStatement pstmt = conn.prepareStatement(sql)) {
             
             pstmt.setString(1, username);
-            ResultSet rs = pstmt.executeQuery();
+            pstmt.setString(2, password);
             
+            java.sql.ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
-                String storedPass = rs.getString("password");
-                return storedPass.equals(password);
+                // Return the official name from the database
+                return rs.getString("username");
             }
-        } catch (SQLException e) {
+        } catch (java.sql.SQLException e) {
             e.printStackTrace();
         }
-        return false;
+        return null; // Login failed
     }
-
     /**
      * Save a chat message to the database.
      */
