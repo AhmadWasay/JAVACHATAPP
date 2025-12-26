@@ -48,7 +48,9 @@ public class LoginController {
                 PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
                 BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-                String command = isLogin ? Protocol.LOGIN : Protocol.REGISTER;
+                // OLD: String command = isLogin ? Protocol.LOGIN : Protocol.REGISTER;
+                // NEW: Use CHECK_LOGIN for logging in, but keep REGISTER for registering
+                String command = isLogin ? Protocol.CHECK_LOGIN : Protocol.REGISTER;
                 out.println(Protocol.CLIENT_PREFIX + command + " " + user + " " + pass);
 
                 String response = in.readLine(); 

@@ -28,6 +28,21 @@ public class ClientHandler implements Runnable {
         }
     }
 
+    private void handleCheckLogin(String line) {
+        String[] parts = line.split(" ", 3); // C:CHECK_LOGIN user pass
+        if (parts.length < 3) return;
+        
+        String user = parts[1];
+        String pass = parts[2];
+
+        if (DatabaseManager.checkLogin(user, pass)) {
+            // Success: Tell client it's okay, but DON'T join the chat
+            sendMessage(Protocol.SERVER_PREFIX + Protocol.LOGIN_SUCCESS);
+        } else {
+            sendMessage(Protocol.SERVER_PREFIX + Protocol.LOGIN_FAIL);
+        }
+    }
+
     @Override
     public void run() {
         try {
@@ -40,15 +55,24 @@ public class ClientHandler implements Runnable {
                 String line = in.readLine();
                 if (line == null) return; 
 
+                // 1. Full Login (For Chat Controller)
                 if (line.startsWith(Protocol.CLIENT_PREFIX + Protocol.LOGIN)) {
                     authenticated = handleLogin(line);
-                } else if (line.startsWith(Protocol.CLIENT_PREFIX + Protocol.REGISTER)) {
+                } 
+                // 2. Register (For Chat Controller)
+                else if (line.startsWith(Protocol.CLIENT_PREFIX + Protocol.REGISTER)) {
                     authenticated = handleRegister(line);
-                } else {
+                } 
+                // 3. NEW: Check Login (For Login Controller - Silent)
+                else if (line.startsWith(Protocol.CLIENT_PREFIX + Protocol.CHECK_LOGIN)) {
+                    handleCheckLogin(line);
+                    // Note: We do NOT set authenticated=true, so the loop continues 
+                    // or the client disconnects. Perfect for just checking.
+                } 
+                else {
                     sendMessage(Protocol.SERVER_PREFIX + "ERROR Please login first");
                 }
             }
-
             // --- FIX 2: Removed Duplicate "PHASE 2" Block ---
             
             // --- PHASE 2: JOINING CHAT ---
