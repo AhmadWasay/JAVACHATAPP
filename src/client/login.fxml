@@ -2,39 +2,63 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Hyperlink?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.text.Font?>
 
-<VBox alignment="CENTER" spacing="15.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.LoginController">
-    <padding>
-        <Insets bottom="40.0" left="40.0" right="40.0" top="40.0" />
-    </padding>
-
-    <Label text="Java Chat App" textFill="#333333">
-        <font>
-            <Font name="Segoe UI Bold" size="24.0" />
-        </font>
-    </Label>
+<StackPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.LoginController" style="-fx-background-color: #f0f2f5;">
     
-    <Label text="Sign in to continue" textFill="#666666">
-        <font>
-            <Font name="Segoe UI" size="14.0" />
-        </font>
+    <VBox fx:id="loginPane" alignment="CENTER" spacing="15.0" maxWidth="350" style="-fx-background-color: white; -fx-padding: 30; -fx-background-radius: 10; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5);">
+        <Label text="JavaChat Login">
+            <font><Font name="Segoe UI Bold" size="22.0" /></font>
+        </Label>
+        
+        <TextField fx:id="loginUserField" promptText="Username" style="-fx-padding: 10;"/>
+        <PasswordField fx:id="loginPassField" promptText="Password" style="-fx-padding: 10;"/>
+        
+        <Button fx:id="loginBtn" text="Login" maxWidth="Infinity" style="-fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10; -fx-cursor: hand;"/>
+        
+        <Hyperlink fx:id="forgotPasswordLink" text="Forgot Password? / Login via Email" style="-fx-text-fill: #2196F3;"/>
+        
+        <Label text="— OR —" textFill="#999999"/>
+        
+        <Button fx:id="goToRegisterBtn" text="Create New Account" maxWidth="Infinity" style="-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10; -fx-cursor: hand;"/>
+    </VBox>
+
+    <VBox fx:id="registerPane" visible="false" alignment="CENTER" spacing="15.0" maxWidth="350" style="-fx-background-color: white; -fx-padding: 30; -fx-background-radius: 10; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5);">
+        <Label text="Create Account">
+            <font><Font name="Segoe UI Bold" size="22.0" /></font>
+        </Label>
+        
+        <TextField fx:id="regUserField" promptText="Choose Username" style="-fx-padding: 10;"/>
+        <PasswordField fx:id="regPassField" promptText="Choose Password" style="-fx-padding: 10;"/>
+        <TextField fx:id="regEmailField" promptText="Email Address" style="-fx-padding: 10;"/>
+        
+        <Button fx:id="registerBtn" text="Sign Up" maxWidth="Infinity" style="-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10; -fx-cursor: hand;"/>
+        
+        <Button fx:id="backToLoginBtn1" text="Back to Login" maxWidth="Infinity" style="-fx-background-color: transparent; -fx-text-fill: #666; -fx-cursor: hand;"/>
+    </VBox>
+
+    <VBox fx:id="otpPane" visible="false" alignment="CENTER" spacing="15.0" maxWidth="350" style="-fx-background-color: white; -fx-padding: 30; -fx-background-radius: 10; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5);">
+        <Label text="Login via Email">
+            <font><Font name="Segoe UI Bold" size="22.0" /></font>
+        </Label>
+        
+        <Label text="Enter your registered email to receive a login code." wrapText="true" textAlignment="CENTER" textFill="#666"/>
+        
+        <TextField fx:id="otpEmailField" promptText="Your Email Address" style="-fx-padding: 10;"/>
+        
+        <Button fx:id="sendOtpBtn" text="Send Access Code" maxWidth="Infinity" style="-fx-background-color: #FF9800; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10; -fx-cursor: hand;"/>
+        
+        <Button fx:id="backToLoginBtn2" text="Back to Login" maxWidth="Infinity" style="-fx-background-color: transparent; -fx-text-fill: #666; -fx-cursor: hand;"/>
+    </VBox>
+
+    <Label fx:id="globalErrorLabel" text="Error Message" textFill="RED" visible="false" StackPane.alignment="BOTTOM_CENTER">
+        <StackPane.margin><Insets bottom="20"/></StackPane.margin>
     </Label>
 
-    <TextField fx:id="userField" promptText="Username" prefWidth="250.0"/>
-    <PasswordField fx:id="passField" promptText="Password" prefWidth="250.0"/>
-
-    <HBox spacing="10" alignment="CENTER">
-        <Button fx:id="loginButton" text="Login" defaultButton="true" prefWidth="100.0" 
-                style="-fx-background-color: #0078D7; -fx-text-fill: white; -fx-cursor: hand;"/>
-        <Button fx:id="registerButton" text="Register" prefWidth="100.0" 
-                style="-fx-background-color: #E0E0E0; -fx-text-fill: black; -fx-cursor: hand;"/>
-    </HBox>
-
-    <Label fx:id="errorLabel" textFill="RED" visible="false"/>
-</VBox>
+</StackPane>

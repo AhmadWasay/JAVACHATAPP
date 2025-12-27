@@ -10,8 +10,12 @@ public class ClientHandler implements Runnable {
     private PrintWriter out;
     private BufferedReader in;
     private String username = null;
+
+    private String tempUser = null;
+    private String tempPass = null;
+    private String tempEmail = null;
+    private String expectedOTP = null;
     
-    // --- FIX 1: Define this variable ---
     private boolean inChat = false; 
 
     public ClientHandler(Socket socket, ChatServer server) {
@@ -28,24 +32,6 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    private boolean handleLogin(String line) {
-        String[] parts = line.split(" ", 3);
-        if (parts.length < 3) return false;
-        String userRaw = parts[1];
-        String pass = parts[2];
-
-        // NEW: Get the official name from DB
-        String officialName = DatabaseManager.checkLogin(userRaw, pass);
-
-        if (officialName != null) {
-            this.username = officialName; // Set the correct casing (e.g. "Abdullah")
-            return true;
-        } else {
-            sendMessage(Protocol.SERVER_PREFIX + Protocol.LOGIN_FAIL);
-            return false;
-        }
-    }
-
     @Override
     public void run() {
         try {
@@ -58,28 +44,35 @@ public class ClientHandler implements Runnable {
                 String line = in.readLine();
                 if (line == null) return; 
 
-                // 1. Full Login (For Chat Controller)
-                if (line.startsWith(Protocol.CLIENT_PREFIX + Protocol.LOGIN)) {
-                    authenticated = handleLogin(line);
-                } 
-                // 2. Register (For Chat Controller)
-                else if (line.startsWith(Protocol.CLIENT_PREFIX + Protocol.REGISTER)) {
-                    authenticated = handleRegister(line);
-                } 
-                // 3. NEW: Check Login (For Login Controller - Silent)
-                else if (line.startsWith(Protocol.CLIENT_PREFIX + Protocol.CHECK_LOGIN)) {
+                // 1. Existing Login (User + Pass)
+                if (line.startsWith(Protocol.CLIENT_PREFIX + Protocol.CHECK_LOGIN)) {
                     handleCheckLogin(line);
-                    // Note: We do NOT set authenticated=true, so the loop continues 
-                    // or the client disconnects. Perfect for just checking.
-                } 
+                }
+                // 2. Existing Register
+                else if (line.startsWith(Protocol.CLIENT_PREFIX + Protocol.REGISTER)) {
+                    authenticated = handleRegister(line); // Note: handleRegister returns false always now, as it waits for OTP
+                }
+                // 3. Register OTP Verify
+                else if (line.startsWith(Protocol.CLIENT_PREFIX + "VERIFY_OTP")) {
+                    handleVerifyOTP(line);
+                }
+                // 4. NEW: Request Login OTP (Forgot Password / Email Login)
+                else if (line.startsWith(Protocol.CLIENT_PREFIX + Protocol.REQUEST_LOGIN_OTP)) {
+                    handleRequestLoginOTP(line);
+                }
+                // 5. NEW: Verify Login OTP
+                else if (line.startsWith(Protocol.CLIENT_PREFIX + Protocol.VERIFY_LOGIN_OTP)) {
+                    authenticated = handleVerifyLoginOTP(line);
+                }
                 else {
                     sendMessage(Protocol.SERVER_PREFIX + "ERROR Please login first");
                 }
             }
-            // --- FIX 2: Removed Duplicate "PHASE 2" Block ---
-            
+
             // --- PHASE 2: JOINING CHAT ---
-            inChat = true; // Mark them as officially joined
+            if (username == null) return; // Safety check
+
+            inChat = true; 
             
             sendMessage(Protocol.SERVER_PREFIX + Protocol.LOGIN_SUCCESS + " " + username);
             server.broadcast(Protocol.SERVER_PREFIX + "USER_JOINED " + username, this);
@@ -108,12 +101,58 @@ public class ClientHandler implements Runnable {
         }
     }
 
+    // --- NEW METHODS FOR EMAIL LOGIN ---
+
+    private void handleRequestLoginOTP(String line) {
+        String[] parts = line.split(" ", 2);
+        if (parts.length < 2) return;
+        String email = parts[1];
+        
+        // 1. Check if email exists in DB
+        String foundUsername = DatabaseManager.getUsernameByEmail(email);
+        
+        if (foundUsername == null) {
+            sendMessage(Protocol.SERVER_PREFIX + "ERROR Email not found.");
+            return;
+        }
+        
+        // 2. Generate OTP
+        int randomPin = (int) (Math.random() * 900000) + 100000;
+        this.expectedOTP = String.valueOf(randomPin);
+        this.tempEmail = email; 
+        this.tempUser = foundUsername; // Store the username we found in DB
+        
+        // 3. Send Email
+        new Thread(() -> {
+            EmailService.sendOTP(email, expectedOTP);
+        }).start();
+        
+        sendMessage(Protocol.SERVER_PREFIX + "OTP_SENT");
+    }
+
+    private boolean handleVerifyLoginOTP(String line) {
+        String[] parts = line.split(" ", 3); // VERIFY_LOGIN_OTP email code
+        String code = parts[2];
+        
+        if (this.expectedOTP != null && this.expectedOTP.equals(code)) {
+            // Success! 
+            this.username = this.tempUser; // Use the username we found earlier
+            return true; // Breaks the auth loop
+        } else {
+            sendMessage(Protocol.SERVER_PREFIX + "ERROR Invalid Code");
+            return false;
+        }
+    }
+
+    // --- EXISTING METHODS (Kept same) ---
+
     private void handleCheckLogin(String line) {
         String[] parts = line.split(" ", 3);
         if (parts.length < 3) return;
         String userRaw = parts[1];
         String pass = parts[2];
 
+        // Only send success/fail, do NOT set authenticated=true yet (Client must switch scenes first)
         if (DatabaseManager.checkLogin(userRaw, pass) != null) {
             sendMessage(Protocol.SERVER_PREFIX + Protocol.LOGIN_SUCCESS);
         } else {
@@ -122,17 +161,45 @@ public class ClientHandler implements Runnable {
     }
 
     private boolean handleRegister(String line) {
-        String[] parts = line.split(" ", 3);
-        if (parts.length < 3) return false;
+        String[] parts = line.split(" ", 4);
+        if (parts.length < 4) return false;
+
         String user = parts[1];
         String pass = parts[2];
+        String email = parts[3];
 
-        if (DatabaseManager.registerUser(user, pass)) {
-            this.username = user;
-            return true;
-        } else {
-            sendMessage(Protocol.SERVER_PREFIX + "ERROR Username taken");
+        if (DatabaseManager.checkLogin(user, "dummy") != null) {
+            sendMessage(Protocol.SERVER_PREFIX + "ERROR Username already exists.");
             return false;
+        }
+
+        int randomPin = (int) (Math.random() * 900000) + 100000;
+        this.expectedOTP = String.valueOf(randomPin);
+        this.tempUser = user;
+        this.tempPass = pass;
+        this.tempEmail = email;
+
+        new Thread(() -> EmailService.sendOTP(email, expectedOTP)).start();
+
+        sendMessage(Protocol.SERVER_PREFIX + "OTP_REQ");
+        return false;
+    }
+
+    private void handleVerifyOTP(String line) {
+        String[] parts = line.split(" ", 2);
+        String code = parts[1];
+
+        if (this.expectedOTP != null && this.expectedOTP.equals(code)) {
+            if (DatabaseManager.registerUser(tempUser, tempPass, tempEmail)) {
+                sendMessage(Protocol.SERVER_PREFIX + Protocol.LOGIN_SUCCESS); 
+                // We don't auto-login here because the client architecture expects 
+                // to return to login screen or re-connect. 
+                // But for seamlessness, if you want auto-login, set authenticated=true here.
+            } else {
+                sendMessage(Protocol.SERVER_PREFIX + "ERROR Database error.");
+            }
+        } else {
+            sendMessage(Protocol.SERVER_PREFIX + "ERROR Invalid OTP.");
         }
     }
 
@@ -142,8 +209,11 @@ public class ClientHandler implements Runnable {
              if (parts.length >= 3) {
                  String target = parts[1];
                  String msg = parts[2];
-
+                 
+                 // Save to DB
                  DatabaseManager.saveMessage(this.username, target, msg);
+                 
+                 // Try to send
                  boolean sent = server.sendPrivateMessage(this.username, target, msg);
                  
                  if (sent) {
@@ -153,12 +223,11 @@ public class ClientHandler implements Runnable {
                  }
              }
         }
+        // TYPING logic removed to fix the error
     }
 
     private void close() {
         try { socket.close(); } catch (IOException ignored) {}
-        
-        // --- FIX 3: Check inChat to prevent "USER_LEFT null" spam ---
         if (inChat && username != null) {
             server.removeClient(this);
         }

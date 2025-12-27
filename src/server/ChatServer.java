@@ -102,6 +102,17 @@ public class ChatServer {
         broadcast(sb.toString(), null);
     }
 
+    // Add this ONLY if you want the typing feature
+    public void sendTypingSignal(String sender, String target) {
+        synchronized (clients) {
+            for (ClientHandler ch : clients) {
+                if (ch.getUsername() != null && ch.getUsername().equalsIgnoreCase(target)) {
+                    ch.sendMessage(common.Protocol.SERVER_PREFIX + "TYPING " + sender);
+                }
+            }
+        }
+    }
+
     // Add this method to ChatServer.java
     public boolean sendPrivateMessage(String senderName, String targetName, String message) {
         synchronized (clients) {

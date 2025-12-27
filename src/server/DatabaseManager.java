@@ -25,17 +25,21 @@ public class DatabaseManager {
     /**
      * Register a new user. Returns false if username already exists.
      */
-    public static boolean registerUser(String username, String password) {
-        String sql = "INSERT INTO users (username, password) VALUES (?, ?)";
-        try (Connection conn = getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
+    // Update arguments to include email
+    public static boolean registerUser(String username, String password, String email) {
+        // Check if user exists
+        if (checkLogin(username, password) != null) return false; 
+
+        String sql = "INSERT INTO users (username, password, email) VALUES (?, ?, ?)";
+        try (java.sql.Connection conn = getConnection();
+             java.sql.PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, username);
-            pstmt.setString(2, password); // In a real app, hash this password!
+            pstmt.setString(2, password);
+            pstmt.setString(3, email); // Save the email
             pstmt.executeUpdate();
             return true;
-        } catch (SQLException e) {
-            System.err.println("Registration failed: " + e.getMessage());
+        } catch (java.sql.SQLException e) {
+            e.printStackTrace();
             return false;
         }
     }
@@ -56,6 +60,24 @@ public class DatabaseManager {
             e.printStackTrace();
         }
         return users;
+    }
+
+    // Add this to DatabaseManager.java
+    public static String getUsernameByEmail(String email) {
+        String sql = "SELECT username FROM users WHERE email = ?";
+        try (java.sql.Connection conn = getConnection();
+             java.sql.PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setString(1, email);
+            java.sql.ResultSet rs = pstmt.executeQuery();
+            
+            if (rs.next()) {
+                return rs.getString("username");
+            }
+        } catch (java.sql.SQLException e) {
+            e.printStackTrace();
+        }
+        return null; // Email not found
     }
 
     /**
