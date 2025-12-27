@@ -32,6 +32,22 @@ public class ClientHandler implements Runnable {
         }
     }
 
+    private boolean handleLogin(String line) {
+        String[] parts = line.split(" ", 3);
+        if (parts.length < 3) return false;
+        String userRaw = parts[1];
+        String pass = parts[2];
+
+        String officialName = DatabaseManager.checkLogin(userRaw, pass);
+        if (officialName != null) {
+            this.username = officialName;
+            return true;
+        } else {
+            sendMessage(Protocol.SERVER_PREFIX + Protocol.LOGIN_FAIL);
+            return false;
+        }
+    }
+
     @Override
     public void run() {
         try {
@@ -44,23 +60,29 @@ public class ClientHandler implements Runnable {
                 String line = in.readLine();
                 if (line == null) return; 
 
-                // 1. Existing Login (User + Pass)
-                if (line.startsWith(Protocol.CLIENT_PREFIX + Protocol.CHECK_LOGIN)) {
+                // 1. STANDARD LOGIN (This was missing!)
+                if (line.startsWith(Protocol.CLIENT_PREFIX + Protocol.LOGIN)) {
+                     if (handleLogin(line)) {
+                         authenticated = true;
+                     }
+                }
+                // 2. Check Login (Just verifies password, doesn't connect)
+                else if (line.startsWith(Protocol.CLIENT_PREFIX + Protocol.CHECK_LOGIN)) {
                     handleCheckLogin(line);
                 }
-                // 2. Existing Register
+                // 3. Register
                 else if (line.startsWith(Protocol.CLIENT_PREFIX + Protocol.REGISTER)) {
-                    authenticated = handleRegister(line); // Note: handleRegister returns false always now, as it waits for OTP
+                    authenticated = handleRegister(line); 
                 }
-                // 3. Register OTP Verify
+                // 4. Verify Register OTP
                 else if (line.startsWith(Protocol.CLIENT_PREFIX + "VERIFY_OTP")) {
                     handleVerifyOTP(line);
                 }
-                // 4. NEW: Request Login OTP (Forgot Password / Email Login)
+                // 5. Request Login OTP
                 else if (line.startsWith(Protocol.CLIENT_PREFIX + Protocol.REQUEST_LOGIN_OTP)) {
                     handleRequestLoginOTP(line);
                 }
-                // 5. NEW: Verify Login OTP
+                // 6. Verify Login OTP
                 else if (line.startsWith(Protocol.CLIENT_PREFIX + Protocol.VERIFY_LOGIN_OTP)) {
                     authenticated = handleVerifyLoginOTP(line);
                 }

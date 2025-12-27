@@ -32,6 +32,9 @@ public class ChatController {
 
     private ChatClient client;
     private String password;
+
+    private String serverHost = "localhost"; // Default
+    private int serverPort = 5555;
     
     private static final String UNIVERSAL_CHAT = "Universal Chat";
     private String currentChatTarget = UNIVERSAL_CHAT;
@@ -128,10 +131,17 @@ public class ChatController {
         }
     }
 
+    public void setServerInfo(String host, int port) {
+        this.serverHost = host;
+        this.serverPort = port;
+    }
+
     private void connect() {
         if (client != null) return; 
-        String host = "localhost";
-        int port = 5555;
+
+        String host = this.serverHost;
+        int port = this.serverPort;
+        
         String name = nameField.getText().trim();
         
         usersList.getItems().add(UNIVERSAL_CHAT);

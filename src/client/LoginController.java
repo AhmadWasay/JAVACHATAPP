@@ -21,6 +21,7 @@ public class LoginController {
     @FXML private VBox otpPane;
 
     // Login Fields
+    @FXML private TextField ipField; // NEW: IP Field
     @FXML private TextField loginUserField;
     @FXML private PasswordField loginPassField;
     @FXML private Button loginBtn;
@@ -41,7 +42,7 @@ public class LoginController {
 
     @FXML private Label globalErrorLabel;
 
-    private static final String HOST = "localhost";
+    // REMOVED: private static final String HOST = "localhost"; 
     private static final int PORT = 5555;
 
     @FXML
@@ -71,6 +72,12 @@ public class LoginController {
             globalErrorLabel.setText(msg);
             globalErrorLabel.setVisible(true);
         });
+    }
+
+    // --- Helper to get Host ---
+    private String getHost() {
+        String ip = ipField.getText().trim();
+        return ip.isEmpty() ? "localhost" : ip;
     }
 
     private void handleStandardLogin() {
@@ -164,7 +171,13 @@ public class LoginController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("chat.fxml"));
             Parent root = loader.load();
             ChatController controller = loader.getController();
+            
+            // Note: We might want to pass the IP to ChatController too, 
+            // but for now ChatController uses "localhost". 
+            // FIX: We need to pass the IP to ChatController!
+            controller.setServerInfo(getHost(), PORT); // New Method needed in ChatController
             controller.setAutoLogin(user, pass);
+            
             Stage stage = (Stage) loginBtn.getScene().getWindow();
             stage.setScene(new Scene(root));
             stage.setTitle("JavaChat - " + user);
@@ -185,11 +198,12 @@ public class LoginController {
     }
 
     private void runTask(SocketTask task) {
+        String targetHost = getHost(); // Read from UI
         new Thread(() -> {
             try {
-                Socket s = new Socket(HOST, PORT);
+                Socket s = new Socket(targetHost, PORT);
                 task.run(s);
-            } catch (Exception e) { showError("Connection Failed"); }
+            } catch (Exception e) { showError("Connection Failed to " + targetHost); }
         }).start();
     }
     

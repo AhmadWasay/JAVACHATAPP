@@ -13,9 +13,11 @@
 <StackPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.LoginController" style="-fx-background-color: #f0f2f5;">
     
     <VBox fx:id="loginPane" alignment="CENTER" spacing="15.0" maxWidth="350" style="-fx-background-color: white; -fx-padding: 30; -fx-background-radius: 10; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5);">
-        <Label text="JavaChat Login">
+        <Label text="Welcome Back?">
             <font><Font name="Segoe UI Bold" size="22.0" /></font>
         </Label>
+        
+        <TextField fx:id="ipField" promptText="Server IP (e.g. 192.168.1.5)" text="localhost" style="-fx-padding: 10;"/>
         
         <TextField fx:id="loginUserField" promptText="Username" style="-fx-padding: 10;"/>
         <PasswordField fx:id="loginPassField" promptText="Password" style="-fx-padding: 10;"/>
@@ -57,8 +59,10 @@
         <Button fx:id="backToLoginBtn2" text="Back to Login" maxWidth="Infinity" style="-fx-background-color: transparent; -fx-text-fill: #666; -fx-cursor: hand;"/>
     </VBox>
 
-    <Label fx:id="globalErrorLabel" text="Error Message" textFill="RED" visible="false" StackPane.alignment="BOTTOM_CENTER">
-        <StackPane.margin><Insets bottom="20"/></StackPane.margin>
+    <Label fx:id="globalErrorLabel" text="Error Message" textFill="RED" visible="false" StackPane.alignment="BOTTOM_CENTER" style="-fx-padding: 10; -fx-background-color: rgba(255,0,0,0.1); -fx-background-radius: 5;">
+        <StackPane.margin>
+            <Insets bottom="20"/>
+        </StackPane.margin>
     </Label>
 
 </StackPane>
