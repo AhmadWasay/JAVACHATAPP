@@ -14,9 +14,6 @@ public final class Protocol {
     // --- NEW: OTP Login Commands ---
     public static final String REQUEST_LOGIN_OTP = "REQ_LOGIN_OTP"; // C:REQ_LOGIN_OTP <email>
     public static final String VERIFY_LOGIN_OTP = "VERIFY_LOGIN_OTP"; // C:VERIFY_LOGIN_OTP <email> <code>
-    
-    // ... existing commands ...
-    public static final String TYPING = "TYPING"; 
-    
+        
     private Protocol(){}
 }

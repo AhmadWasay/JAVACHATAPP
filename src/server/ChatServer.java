@@ -9,13 +9,10 @@ import java.util.Set;
 
 import common.Protocol;
 
-/**
- * ChatServer: accepts connections and keeps set of ClientHandler
- */
 public class ChatServer {
     private final int port;
     private final java.util.List<String> chatHistory = Collections.synchronizedList(new java.util.ArrayList<>());
-    // Keep set of handlers for broadcasting
+
     final Set<ClientHandler> clients = Collections.synchronizedSet(new HashSet<>());
 
     public ChatServer(int port) {
@@ -35,30 +32,32 @@ public class ChatServer {
             System.err.println("Server exception: " + e.getMessage());
             e.printStackTrace();
         }
+        System.out.println("Server started.");
     }
 
     public void broadcast(String message, ClientHandler exclude) {
-        // Only save actual chat messages (MSG) or System messages, ignore Connect/Disconnect technical signals if you want
-        if (message.startsWith(Protocol.SERVER_PREFIX + "MSG")) {
-            synchronized (chatHistory) {
-                chatHistory.add(message);
-                if (chatHistory.size() > 10) { // Keep only last 10
-                    chatHistory.remove(0);
-                }
-            }
-        }
-
         synchronized (clients) {
             for (ClientHandler ch : clients) {
                 if (ch != exclude) ch.sendMessage(message);
             }
         }
     }
-    
-    // Add a getter for the handler to use
+
+    public boolean sendPrivateMessage(String senderName, String targetName, String message) {
+        synchronized (clients) {
+            for (ClientHandler ch : clients) {
+                if (ch.getUsername() != null && ch.getUsername().equalsIgnoreCase(targetName)) {
+                    ch.sendMessage(Protocol.SERVER_PREFIX + "MSG " + senderName + " (Private): " + message);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     public java.util.List<String> getHistory() {
         synchronized (chatHistory) {
-            return new java.util.ArrayList<>(chatHistory); // Return a copy
+            return new java.util.ArrayList<>(chatHistory);
         }
     }
 
@@ -69,66 +68,33 @@ public class ChatServer {
     }
 
     public void broadcastUserList() {
-        // 1. Get ALL users from Database
         java.util.List<String> allUsers = DatabaseManager.getAllUsernames();
         
-        // 2. Get ONLINE users (Convert to Lowercase for matching)
         java.util.Set<String> onlineUsersLower = new java.util.HashSet<>();
         synchronized (clients) {
             for (ClientHandler ch : clients) {
                 if (ch.getUsername() != null) {
-                    // Store as lowercase: "abdullah"
                     onlineUsersLower.add(ch.getUsername().toLowerCase());
                 }
             }
         }
 
-        // 3. Build the list string
         StringBuilder sb = new StringBuilder();
         sb.append(common.Protocol.SERVER_PREFIX).append("USERLIST");
         
         for (String user : allUsers) {
             sb.append(" ");
-            sb.append(user); // Send the pretty name (e.g. "Abdullah")
+            sb.append(user);
             sb.append(":");
             
-            // 4. Check if the lowercase version exists in our online set
             boolean isOnline = onlineUsersLower.contains(user.toLowerCase());
             
             sb.append(isOnline ? "1" : "0");
         }
 
-        // 5. Broadcast to everyone
         broadcast(sb.toString(), null);
     }
 
-    // Add this ONLY if you want the typing feature
-    public void sendTypingSignal(String sender, String target) {
-        synchronized (clients) {
-            for (ClientHandler ch : clients) {
-                if (ch.getUsername() != null && ch.getUsername().equalsIgnoreCase(target)) {
-                    ch.sendMessage(common.Protocol.SERVER_PREFIX + "TYPING " + sender);
-                }
-            }
-        }
-    }
-
-    // Add this method to ChatServer.java
-    public boolean sendPrivateMessage(String senderName, String targetName, String message) {
-        synchronized (clients) {
-            for (ClientHandler ch : clients) {
-                // Check if this is the user we are looking for
-                if (ch.getUsername() != null && ch.getUsername().equalsIgnoreCase(targetName)) {
-                    // Send the message with a "(Private)" tag so they know it's a whisper
-                    ch.sendMessage(Protocol.SERVER_PREFIX + "MSG " + senderName + " (Private): " + message);
-                    return true; // Found and sent
-                }
-            }
-        }
-        return false; // User not online
-    }
-
-    // Check username uniqueness and return a resolved unique name
     public String resolveUniqueName(String desired) {
         synchronized (clients) {
             String name = desired;
@@ -149,13 +115,5 @@ public class ChatServer {
             } while (collides);
             return name;
         }
-    }
-
-    public static void main(String[] args) {
-        int port = 5555;
-        if (args.length > 0) {
-            port = Integer.parseInt(args[0]);
-        }
-        new ChatServer(port).start();
     }
 }

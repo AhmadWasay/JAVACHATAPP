@@ -42,7 +42,6 @@ public class LoginController {
 
     @FXML private Label globalErrorLabel;
 
-    // REMOVED: private static final String HOST = "localhost"; 
     private static final int PORT = 5555;
 
     @FXML

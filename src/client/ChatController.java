@@ -1,6 +1,7 @@
 package client;
 
 import common.Protocol;
+
 import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.fxml.FXML;
@@ -11,8 +12,10 @@ import javafx.scene.paint.Color;
 import javafx.scene.input.KeyCode;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class ChatController {
 
@@ -23,7 +26,6 @@ public class ChatController {
     @FXML private Button sendButton;
     @FXML private Label statusLabel;
     
-    // Hidden fields
     @FXML private TextField nameField;
     @FXML private TextField hostField; 
     @FXML private TextField portField;
@@ -33,20 +35,24 @@ public class ChatController {
     private ChatClient client;
     private String password;
 
-    private String serverHost = "localhost"; // Default
+    private String serverHost = "localhost"; 
     private int serverPort = 5555;
     
     private static final String UNIVERSAL_CHAT = "Universal Chat";
     private String currentChatTarget = UNIVERSAL_CHAT;
+
+    private boolean historyFinished = false;
     
-    // Store messages
     private final List<ChatMessage> allMessages = new ArrayList<>();
-    
-    // --- NEW: Map to store online status (true = online, false = offline) ---
     private final Map<String, Boolean> userStatusMap = new HashMap<>();
+    private final Set<String> unreadSenders = new HashSet<>();
 
     private static class ChatMessage {
-        String sender; String content; String type; String target; boolean isMyMessage;
+        String sender; 
+        String content; 
+        String type; 
+        String target; 
+        boolean isMyMessage;
         public ChatMessage(String sender, String content, String type, String target, boolean isMyMessage) {
             this.sender = sender; this.content = content; this.type = type; this.target = target; this.isMyMessage = isMyMessage;
         }
@@ -58,11 +64,15 @@ public class ChatController {
         this.connect(); 
     }
 
+    public void setServerInfo(String host, int port) {
+        this.serverHost = host;
+        this.serverPort = port;
+    }
+
     @FXML
     public void initialize() {
         chatBox.heightProperty().addListener((obs, oldVal, newVal) -> scrollPane.setVvalue(1.0));
 
-        // --- UPDATED CELL FACTORY FOR BLUE / GRAY DOTS ---
         usersList.setCellFactory(lv -> new ListCell<String>() {
             @Override
             protected void updateItem(String item, boolean empty) {
@@ -70,23 +80,33 @@ public class ChatController {
                 if (empty || item == null) {
                     setText(null);
                     setGraphic(null);
+                    setStyle("-fx-background-color: transparent;");
                 } else {
-                    setText(item);
+                    HBox row = new HBox(10);
+                    row.setAlignment(Pos.CENTER_LEFT);
+
                     Circle dot = new Circle(4);
-                    
                     if (item.equals(UNIVERSAL_CHAT)) {
-                        dot.setFill(Color.ORANGE); // Group Chat
+                        dot.setFill(Color.ORANGE); 
                     } else {
-                        // Check the map for status
                         boolean isOnline = userStatusMap.getOrDefault(item, false);
-                        if (isOnline) {
-                            dot.setFill(Color.DODGERBLUE); // BLUE for Online
-                        } else {
-                            dot.setFill(Color.LIGHTGRAY); // GRAY for Offline
-                        }
+                        dot.setFill(isOnline ? Color.DODGERBLUE : Color.LIGHTGRAY);
                     }
-                    setGraphic(dot);
-                    setStyle("-fx-padding: 10; -fx-font-size: 14px;");
+
+                    Label nameLbl = new Label(item);
+                    nameLbl.setStyle("-fx-text-fill: black; -fx-font-size: 14px;");
+
+                    if (unreadSenders.contains(item)) {
+                        nameLbl.setStyle("-fx-text-fill: black; -fx-font-size: 14px; -fx-font-weight: bold;");
+                        Label badge = new Label("1");
+                        badge.setStyle("-fx-background-color: red; -fx-text-fill: white; -fx-font-size: 10px; -fx-font-weight: bold; -fx-padding: 2 6; -fx-background-radius: 10;");
+                        row.getChildren().addAll(dot, nameLbl, badge);
+                    } else {
+                        row.getChildren().addAll(dot, nameLbl);
+                    }
+                    
+                    setText(null);
+                    setGraphic(row);
                 }
             }
         });
@@ -106,6 +126,12 @@ public class ChatController {
 
     private void switchChat(String target) {
         this.currentChatTarget = target;
+
+        if (unreadSenders.contains(target)) {
+            unreadSenders.remove(target);
+            usersList.refresh(); 
+        }
+
         if (target.equals(UNIVERSAL_CHAT)) {
             statusLabel.setText("Universal Chat");
         } else {
@@ -131,25 +157,16 @@ public class ChatController {
         }
     }
 
-    public void setServerInfo(String host, int port) {
-        this.serverHost = host;
-        this.serverPort = port;
-    }
-
     private void connect() {
         if (client != null) return; 
 
-        String host = this.serverHost;
-        int port = this.serverPort;
-        
         String name = nameField.getText().trim();
-        
         usersList.getItems().add(UNIVERSAL_CHAT);
         usersList.getSelectionModel().select(0);
 
-        addSystemMessage("Connecting...");
+        addSystemMessage("Connecting to " + serverHost + "...");
         try {
-            client = new ChatClient(host, port, name, password, this::onRawMessage);
+            client = new ChatClient(serverHost, serverPort, name, password, this::onRawMessage);
         } catch (Exception e) {
             addSystemMessage("Failed to connect: " + e.getMessage());
         }
@@ -175,6 +192,12 @@ public class ChatController {
         } else {
             client.sendText("/pm " + currentChatTarget + " " + text);
         }
+
+       ChatMessage myMsg = new ChatMessage("Me", text, "PUBLIC", currentChatTarget, true);
+        
+        allMessages.add(myMsg);
+        addBubbleToUI(myMsg);
+
         inputField.clear();
     }
 
@@ -218,18 +241,15 @@ public class ChatController {
         Platform.runLater(() -> {
             String listPrefix = Protocol.SERVER_PREFIX + "USERLIST";
             
-            // --- UPDATED PARSING LOGIC ---
             if (msg.startsWith(listPrefix)) {
                 String rawData = msg.substring(listPrefix.length()).trim();
-                
                 String selected = usersList.getSelectionModel().getSelectedItem();
                 
                 usersList.getItems().clear();
                 usersList.getItems().add(UNIVERSAL_CHAT);
-                userStatusMap.clear(); // Clear old statuses
+                userStatusMap.clear();
 
                 if (!rawData.isEmpty()) {
-                    // Format: "UserA:1 UserB:0 UserC:1"
                     String[] entries = rawData.split(" ");
                     for (String entry : entries) {
                         if (entry.contains(":")) {
@@ -237,7 +257,6 @@ public class ChatController {
                             String username = parts[0];
                             boolean isOnline = parts[1].equals("1");
                             
-                            // --- FIX: USE equalsIgnoreCase TO PREVENT SELF-CHAT ---
                             String myName = nameField.getText().trim();
                             if (!username.equalsIgnoreCase(myName)) {
                                 usersList.getItems().add(username);
@@ -253,8 +272,13 @@ public class ChatController {
                     usersList.getSelectionModel().select(0);
                 }
                 
-                // Force list refresh to apply colors
                 usersList.refresh();
+                return;
+            }
+
+            // --- LISTEN FOR HISTORY END SIGNAL ---
+            if (msg.startsWith(Protocol.SERVER_PREFIX + "HISTORY_END")) {
+                historyFinished = true; // Now we can show notifications
                 return;
             }
 
@@ -271,8 +295,8 @@ public class ChatController {
                     addSystemMessage(clean.split(" ")[1] + " came online.");
                 } else if (clean.startsWith("USER_LEFT")) {
                     addSystemMessage(clean.split(" ")[1] + " went offline.");
-                } else if (!clean.startsWith("LOGIN_SUCCESS") && !clean.startsWith("CONNECTED")) {
-                     addSystemMessage(clean);
+                } else if (!clean.startsWith("LOGIN_SUCCESS")) {
+                      addSystemMessage(clean);
                 }
             }
         });
@@ -282,23 +306,45 @@ public class ChatController {
         String sender = "", content = "", type = "PUBLIC", target = "";
         boolean isMyMessage = false;
 
+        // 1. Parse the message format
         if (raw.contains("->")) {
+            // Format: "Me -> Receiver: Content"
             String[] parts = raw.split("->");
             String[] rightPart = parts[1].split(":", 2);
             sender = "Me"; isMyMessage = true; target = rightPart[0].trim(); content = rightPart[1].trim(); type = "PRIVATE";
         } else if (raw.contains("(Private):")) {
+            // Format: "Sender (Private): Content"
             String[] parts = raw.split("\\(Private\\):", 2);
             sender = parts[0].trim(); content = parts[1].trim(); target = sender; type = "PRIVATE"; isMyMessage = false;
         } else {
+            // Format: "Sender Content" (Public)
             String[] parts = raw.split(" ", 2);
             sender = parts[0]; content = parts[1];
-            if (sender.equals(nameField.getText()) || sender.equals("Me")) isMyMessage = true;
+            
+            // --- FIX 1: GREEN BUBBLE / RIGHT SIDE LOGIC ---
+            // We use 'equalsIgnoreCase' so "ahmad" matches "Ahmad"
+            String myName = nameField.getText().trim();
+            if (sender.equalsIgnoreCase(myName) || sender.equals("Me")) {
+                isMyMessage = true;
+            }
+            
             type = "PUBLIC"; target = UNIVERSAL_CHAT;
         }
 
         ChatMessage newMsg = new ChatMessage(sender, content, type, target, isMyMessage);
         allMessages.add(newMsg);
 
+        // --- FIX 2: UNREAD BADGE LOGIC ---
+        if (!isMyMessage) {
+            // We only mark as unread if 'historyFinished' is TRUE.
+            // This prevents the Red Badge from appearing on old messages during login.
+            if (historyFinished && type.equals("PRIVATE") && !sender.equalsIgnoreCase(currentChatTarget)) {
+                unreadSenders.add(sender);
+                usersList.refresh(); 
+            }
+        }
+
+        // 3. Decide whether to show the bubble immediately
         boolean renderNow = false;
         if (currentChatTarget.equals(UNIVERSAL_CHAT) && type.equals("PUBLIC")) renderNow = true;
         if (type.equals("PRIVATE") && (target.equals(currentChatTarget) || sender.equals(currentChatTarget))) renderNow = true;

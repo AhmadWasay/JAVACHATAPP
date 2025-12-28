@@ -105,6 +105,7 @@ public class ClientHandler implements Runnable {
             for (String histMsg : history) {
                 sendMessage(Protocol.SERVER_PREFIX + histMsg);
             }
+            sendMessage(Protocol.SERVER_PREFIX + "HISTORY_END");
 
             // --- PHASE 3: MAIN CHAT LOOP ---
             String line;
