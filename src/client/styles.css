@@ -1,61 +1,127 @@
+/* GLOBAL FONTS & COLORS */
 .root {
-    -fx-font-family: "Segoe UI", "Arial";
-    -fx-base: #ffffff; /* Global white base */
+    -fx-font-family: "Segoe UI", "Helvetica Neue", "Arial";
+    -fx-font-size: 14px;
+    /* Palette */
+    -fx-base-color: #f0f2f5;
+    -fx-accent-color: #0080ff;     /* Professional Blue */
+    -fx-sidebar-bg: #2c3e50;       /* Dark Slate Sidebar */
+    -fx-sidebar-text: #ecf0f1;
+    -fx-chat-bg: #eef1f4;          /* Light Gray Chat Background */
 }
 
-/* SIDEBAR: User List */
+/* --- SIDEBAR (User List) --- */
 .list-view {
-    -fx-background-color: white;
-    -fx-border-color: #e0e0e0;
-    -fx-border-width: 0 1 0 0;
+    -fx-background-color: -fx-sidebar-bg;
+    -fx-background-insets: 0;
+    -fx-padding: 10px;
+    -fx-border-width: 0;
 }
 
 .list-view .list-cell {
-    -fx-background-color: white;
-    -fx-padding: 12 15;
-    -fx-border-color: #f5f5f5;
-    -fx-border-width: 0 0 1 0;
-    -fx-text-fill: #333333;
+    -fx-background-color: transparent;
+    -fx-text-fill: -fx-sidebar-text;
+    -fx-padding: 12px 15px;
+    -fx-background-radius: 8px; /* Rounded highlight */
+    -fx-font-size: 14px;
 }
 
-/* Hover effect: Very light blue */
+/* Hover effect */
 .list-view .list-cell:filled:hover {
-    -fx-background-color: #E3F2FD; 
+    -fx-background-color: rgba(255, 255, 255, 0.1);
     -fx-cursor: hand;
 }
 
-/* Selected User: Solid Blue */
+/* Selected User */
 .list-view .list-cell:filled:selected {
-    -fx-background-color: #2196F3;
+    -fx-background-color: -fx-accent-color;
     -fx-text-fill: white;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 5, 0, 0, 2);
 }
 
-/* CHAT AREA */
-.text-area {
-    /* Background of the chat scroll area */
-    -fx-control-inner-background: #F5F7FA; 
-    -fx-background-insets: 0;
-    -fx-highlight-fill: #2196F3; 
-    -fx-highlight-text-fill: white; 
-}
-
-/* BUTTONS */
-.button {
-    -fx-cursor: hand;
-}
-
-/* Update these sections in styles.css */
-
+/* --- CHAT AREA --- */
 .scroll-pane {
     -fx-background-color: transparent;
-    -fx-background: transparent;
+    -fx-background: transparent; /* Removes default white bg */
 }
 
 .scroll-pane .viewport {
-    -fx-background-color: transparent;
+    -fx-background-color: -fx-chat-bg;
 }
 
-/* Ensure the bubbles look sharp */
-.label {
-    -fx-font-family: "Segoe UI Emoji", "Arial";
+/* Chat Header Bar */
+.header-bar {
+    -fx-background-color: white;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 5, 0, 0, 3);
+    -fx-padding: 15px 20px;
+    -fx-border-color: #e0e0e0;
+    -fx-border-width: 0 0 1px 0;
+}
+
+/* --- INPUT AREA --- */
+.input-bar {
+    -fx-background-color: white;
+    -fx-padding: 15px;
+    -fx-border-color: #e0e0e0;
+    -fx-border-width: 1px 0 0 0;
+}
+
+.text-field {
+    -fx-background-color: #f0f2f5;
+    -fx-background-radius: 20px;
+    -fx-padding: 10px 15px;
+    -fx-prompt-text-fill: #999;
+    -fx-border-width: 0;
+}
+
+.text-field:focused {
+    -fx-background-color: white;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,128,255,0.2), 5, 0, 0, 0);
+    -fx-border-color: -fx-accent-color;
+    -fx-border-radius: 20px;
+}
+
+/* --- BUTTONS --- */
+.button {
+    -fx-background-color: -fx-accent-color;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 20px;
+    -fx-padding: 8px 20px;
+    -fx-cursor: hand;
+}
+
+.button:hover {
+    -fx-background-color: #0066cc;
+}
+
+.button:pressed {
+    -fx-background-color: #004c99;
+}
+
+/* Secondary Button (Disconnect) */
+.secondary-button {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+    -fx-text-fill: #ecf0f1;
+    -fx-border-color: rgba(255, 255, 255, 0.2);
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+    -fx-font-size: 12px;
+}
+.secondary-button:hover {
+    -fx-background-color: rgba(255, 82, 82, 0.8); /* Red on hover */
+    -fx-border-color: transparent;
+}
+
+/* --- SCROLLBAR (Make it modern and thin) --- */
+.scroll-bar:vertical {
+    -fx-background-color: transparent;
+    -fx-pref-width: 10;
+}
+.scroll-bar:vertical .thumb {
+    -fx-background-color: #ccc;
+    -fx-background-radius: 5em;
+}
+.scroll-bar:vertical .thumb:hover {
+    -fx-background-color: #999;
 }

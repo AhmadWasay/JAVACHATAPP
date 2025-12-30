@@ -1,68 +1,93 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Hyperlink?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<StackPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.LoginController" style="-fx-background-color: #f0f2f5;">
+<StackPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.LoginController" 
+           style="-fx-background-color: #f0f2f5;">
     
-    <VBox fx:id="loginPane" alignment="CENTER" spacing="15.0" maxWidth="350" style="-fx-background-color: white; -fx-padding: 30; -fx-background-radius: 10; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5);">
-        <Label text="Welcome Back?">
-            <font><Font name="Segoe UI Bold" size="22.0" /></font>
-        </Label>
-        
-        <TextField fx:id="ipField" promptText="Server IP (e.g. 192.168.1.5)" text="localhost" style="-fx-padding: 10;"/>
-        
-        <TextField fx:id="loginUserField" promptText="Username" style="-fx-padding: 10;"/>
-        <PasswordField fx:id="loginPassField" promptText="Password" style="-fx-padding: 10;"/>
-        
-        <Button fx:id="loginBtn" text="Login" maxWidth="Infinity" style="-fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10; -fx-cursor: hand;"/>
-        
-        <Hyperlink fx:id="forgotPasswordLink" text="Forgot Password? / Login via Email" style="-fx-text-fill: #2196F3;"/>
-        
-        <Label text="— OR —" textFill="#999999"/>
-        
-        <Button fx:id="goToRegisterBtn" text="Create New Account" maxWidth="Infinity" style="-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10; -fx-cursor: hand;"/>
-    </VBox>
+    <GridPane alignment="CENTER">
+        <columnConstraints>
+            <ColumnConstraints hgrow="ALWAYS" percentWidth="55.0" halignment="RIGHT"/>
+            <ColumnConstraints hgrow="ALWAYS" percentWidth="45.0" halignment="LEFT"/>
+        </columnConstraints>
+        <rowConstraints>
+            <RowConstraints vgrow="ALWAYS" />
+        </rowConstraints>
 
-    <VBox fx:id="registerPane" visible="false" alignment="CENTER" spacing="15.0" maxWidth="350" style="-fx-background-color: white; -fx-padding: 30; -fx-background-radius: 10; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5);">
-        <Label text="Create Account">
-            <font><Font name="Segoe UI Bold" size="22.0" /></font>
-        </Label>
-        
-        <TextField fx:id="regUserField" promptText="Choose Username" style="-fx-padding: 10;"/>
-        <PasswordField fx:id="regPassField" promptText="Choose Password" style="-fx-padding: 10;"/>
-        <TextField fx:id="regEmailField" promptText="Email Address" style="-fx-padding: 10;"/>
-        
-        <Button fx:id="registerBtn" text="Sign Up" maxWidth="Infinity" style="-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10; -fx-cursor: hand;"/>
-        
-        <Button fx:id="backToLoginBtn1" text="Back to Login" maxWidth="Infinity" style="-fx-background-color: transparent; -fx-text-fill: #666; -fx-cursor: hand;"/>
-    </VBox>
+        <VBox alignment="CENTER_LEFT" spacing="15.0" style="-fx-padding: 0 40 0 60;" GridPane.columnIndex="0">
+            <Label text="JavaChat" textFill="#1877f2">
+                <font><Font name="System Bold" size="64.0" /></font> </Label>
+            <Label text="Connect with friends and the world around you." 
+                   wrapText="true" textFill="#1c1e21" maxWidth="500">
+                <font><Font size="28.0" /></font>
+            </Label>
+        </VBox>
 
-    <VBox fx:id="otpPane" visible="false" alignment="CENTER" spacing="15.0" maxWidth="350" style="-fx-background-color: white; -fx-padding: 30; -fx-background-radius: 10; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5);">
-        <Label text="Login via Email">
-            <font><Font name="Segoe UI Bold" size="22.0" /></font>
-        </Label>
-        
-        <Label text="Enter your registered email to receive a login code." wrapText="true" textAlignment="CENTER" textFill="#666"/>
-        
-        <TextField fx:id="otpEmailField" promptText="Your Email Address" style="-fx-padding: 10;"/>
-        
-        <Button fx:id="sendOtpBtn" text="Send Access Code" maxWidth="Infinity" style="-fx-background-color: #FF9800; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10; -fx-cursor: hand;"/>
-        
-        <Button fx:id="backToLoginBtn2" text="Back to Login" maxWidth="Infinity" style="-fx-background-color: transparent; -fx-text-fill: #666; -fx-cursor: hand;"/>
-    </VBox>
+        <StackPane alignment="CENTER_LEFT" style="-fx-padding: 0 60 0 20;" GridPane.columnIndex="1">
+            
+            <VBox fx:id="loginPane" alignment="CENTER" spacing="15.0" maxWidth="380"
+                  style="-fx-background-color: white; -fx-padding: 30; -fx-background-radius: 8; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.15), 10, 0, 0, 5);">
+                
+                <TextField fx:id="ipField" promptText="Server IP (e.g. localhost)" text="localhost" styleClass="login-field"/>
+                <TextField fx:id="loginUserField" promptText="Email or Phone Number" styleClass="login-field"/>
+                <PasswordField fx:id="loginPassField" promptText="Password" styleClass="login-field"/>
+                
+                <Button fx:id="loginBtn" text="Log In" maxWidth="Infinity" styleClass="fb-blue-button"/>
+                
+                <Hyperlink fx:id="forgotPasswordLink" text="Forgot Password?" style="-fx-text-fill: #1877f2; -fx-font-size: 14px;"/>
+                
+                <Label style="-fx-border-color: #dadde1; -fx-border-width: 1 0 0 0; -fx-padding: 10 0 0 0;" maxWidth="Infinity"/>
+                
+                <Button fx:id="goToRegisterBtn" text="Create new account" styleClass="fb-green-button"/>
+            </VBox>
 
-    <Label fx:id="globalErrorLabel" text="Error Message" textFill="RED" visible="false" StackPane.alignment="BOTTOM_CENTER" style="-fx-padding: 10; -fx-background-color: rgba(255,0,0,0.1); -fx-background-radius: 5;">
-        <StackPane.margin>
-            <Insets bottom="20"/>
-        </StackPane.margin>
+            <VBox fx:id="registerPane" visible="false" alignment="CENTER" spacing="15.0" maxWidth="380"
+                  style="-fx-background-color: white; -fx-padding: 30; -fx-background-radius: 8; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.15), 10, 0, 0, 5);">
+                
+                <Label text="Sign Up" textFill="#1c1e21">
+                    <font><Font name="System Bold" size="32.0" /></font>
+                </Label>
+                <Label text="It's quick and easy." textFill="#606770" />
+                
+                <TextField fx:id="regUserField" promptText="Username" styleClass="login-field"/>
+                <PasswordField fx:id="regPassField" promptText="New Password" styleClass="login-field"/>
+                <TextField fx:id="regEmailField" promptText="Email Address" styleClass="login-field"/>
+                
+                <Button fx:id="registerBtn" text="Sign Up" maxWidth="Infinity" styleClass="fb-green-button" style="-fx-font-size: 18px;"/>
+                
+                <Hyperlink fx:id="backToLoginBtn1" text="Already have an account?" style="-fx-text-fill: #1877f2;"/>
+            </VBox>
+
+            <VBox fx:id="otpPane" visible="false" alignment="CENTER" spacing="15.0" maxWidth="380"
+                  style="-fx-background-color: white; -fx-padding: 30; -fx-background-radius: 8; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.15), 10, 0, 0, 5);">
+                
+                <Label text="Enter Code" textFill="#1c1e21">
+                    <font><Font name="System Bold" size="24.0" /></font>
+                </Label>
+                <Label text="We sent a code to your email." textFill="#606770"/>
+                
+                <TextField fx:id="otpEmailField" promptText="Enter Code" styleClass="login-field"/>
+                
+                <Button fx:id="sendOtpBtn" text="Verify" maxWidth="Infinity" styleClass="fb-blue-button"/>
+                
+                <Hyperlink fx:id="backToLoginBtn2" text="Cancel" style="-fx-text-fill: #1877f2;"/>
+            </VBox>
+
+        </StackPane>
+    </GridPane>
+
+    <Label fx:id="globalErrorLabel" text="Error Message" visible="false" StackPane.alignment="TOP_CENTER" 
+           style="-fx-padding: 15; -fx-background-color: #fa3e3e; -fx-background-radius: 0 0 8 8; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px;">
     </Label>
 
 </StackPane>

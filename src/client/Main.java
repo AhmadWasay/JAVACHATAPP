@@ -6,9 +6,8 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 public class Main extends Application {
-    @Override
+   @Override
     public void start(Stage stage) throws Exception {
-
         FXMLLoader fxml = new FXMLLoader(getClass().getResource("login.fxml"));
         Scene scene = new Scene(fxml.load());
         
@@ -16,8 +15,11 @@ public class Main extends Application {
             scene.getStylesheets().add(getClass().getResource("styles.css").toExternalForm());
         }
         
-        stage.setTitle("JavaChat - Login");
+        stage.setTitle("JavaChat");
         stage.setScene(scene);
+        
+        stage.setMaximized(true); 
+        
         stage.show();
     }
 

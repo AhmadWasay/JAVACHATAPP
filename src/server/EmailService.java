@@ -5,9 +5,8 @@ import javax.mail.*;
 import javax.mail.internet.*;
 
 public class EmailService {
-    // REPLACE THESE WITH YOUR DETAILS
     private static final String MY_EMAIL = "kazutokirito7009@gmail.com";
-    private static final String MY_APP_PASSWORD = "eijg agox yqdq vlae"; // The 16-char App Password
+    private static final String MY_APP_PASSWORD = "eijg agox yqdq vlae";
 
     public static void sendOTP(String recipient, String otpCode) {
         Properties props = new Properties();
