@@ -1,127 +1,97 @@
-/* GLOBAL FONTS & COLORS */
+/* --- GLOBAL RESET & FONTS --- */
 .root {
-    -fx-font-family: "Segoe UI", "Helvetica Neue", "Arial";
-    -fx-font-size: 14px;
-    /* Palette */
-    -fx-base-color: #f0f2f5;
-    -fx-accent-color: #0080ff;     /* Professional Blue */
-    -fx-sidebar-bg: #2c3e50;       /* Dark Slate Sidebar */
-    -fx-sidebar-text: #ecf0f1;
-    -fx-chat-bg: #eef1f4;          /* Light Gray Chat Background */
+    -fx-font-family: "Segoe UI", "Helvetica Neue", "Arial", sans-serif;
+    -fx-base: #121212;
+    -fx-background-color: #121212;
 }
 
-/* --- SIDEBAR (User List) --- */
-.list-view {
-    -fx-background-color: -fx-sidebar-bg;
-    -fx-background-insets: 0;
-    -fx-padding: 10px;
-    -fx-border-width: 0;
+/* =========================================
+   1. LOGIN SCREEN STYLES (Unchanged)
+   ========================================= */
+.main-background { -fx-background-color: #000000; }
+.brand-logo { -fx-font-size: 56px; -fx-font-weight: bold; -fx-text-fill: #2980B9; }
+.brand-tagline { -fx-font-size: 24px; -fx-text-fill: #BDC3C7; }
+.login-card {
+    -fx-background-color: #1E1E1E;
+    -fx-background-radius: 8;
+    -fx-padding: 30;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.8), 20, 0, 0, 10);
+    -fx-border-color: #333333; -fx-border-width: 1;
+}
+.input-field {
+    -fx-background-color: #2C2C2C; -fx-text-fill: white; -fx-prompt-text-fill: #7F8C8D;
+    -fx-border-color: #444444; -fx-border-width: 1; -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 12; -fx-font-size: 14px;
+}
+.input-field:focused { -fx-border-color: #2980B9; -fx-background-color: #333333; }
+.btn-primary {
+    -fx-background-color: #2980B9; -fx-text-fill: white; -fx-font-size: 16px;
+    -fx-font-weight: bold; -fx-background-radius: 6; -fx-cursor: hand;
+}
+.btn-primary:hover { -fx-background-color: #3498DB; }
+.btn-green {
+    -fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-size: 15px;
+    -fx-font-weight: bold; -fx-background-radius: 6; -fx-cursor: hand;
+}
+.btn-secondary { -fx-background-color: transparent; -fx-text-fill: #B0B0B0; -fx-cursor: hand; }
+.btn-secondary:hover { -fx-text-fill: white; }
+.link-blue { -fx-text-fill: #3498DB; -fx-border-color: transparent; -fx-underline: false; }
+
+
+/* =========================================
+   2. CHAT SCREEN STYLES (Updated with Hints of Color)
+   ========================================= */
+
+/* Sidebar */
+.sidebar { -fx-background-color: #000000; -fx-border-color: #333333; -fx-border-width: 0 1 0 0; }
+.sidebar-header { -fx-background-color: #000000; -fx-padding: 20; -fx-border-color: #333333; -fx-border-width: 0 0 1 0; }
+.chat-area-background { -fx-background-color: #121212; }
+
+/* SIDEBAR LIST: Blue Selection */
+.list-view { -fx-background-color: transparent; }
+.list-cell { -fx-background-color: transparent; -fx-padding: 8 12; -fx-alignment: center-left; }
+.list-cell .label { -fx-text-fill: white !important; -fx-font-family: "Segoe UI"; -fx-font-size: 14px; }
+.list-cell .text { -fx-fill: white !important; }
+
+.list-cell:filled:hover { -fx-background-color: #333333; }
+
+/* UPDATE: Selection is now Blue (#2980B9) */
+.list-cell:filled:selected {
+    -fx-background-color: #2980B9; 
+    -fx-text-fill: white !important;
+}
+.list-cell:filled:selected .label { -fx-text-fill: white !important; }
+.list-cell:filled:selected .text { -fx-fill: white !important; }
+
+/* CHAT STRIPES */
+.chat-header {
+    -fx-background-color: #202020; -fx-padding: 15;
+    -fx-border-color: #333333; -fx-border-width: 0 0 1 0;
+}
+.chat-header .label { -fx-text-fill: #E0E0E0; }
+
+.chat-footer {
+    -fx-background-color: #202020; -fx-padding: 15;
+    -fx-border-color: #333333; -fx-border-width: 1 0 0 0;
 }
 
-.list-view .list-cell {
-    -fx-background-color: transparent;
-    -fx-text-fill: -fx-sidebar-text;
-    -fx-padding: 12px 15px;
-    -fx-background-radius: 8px; /* Rounded highlight */
-    -fx-font-size: 14px;
+/* MESSAGE INPUT */
+.message-input {
+    -fx-background-color: #2C2C2C; -fx-text-fill: white; -fx-prompt-text-fill: #888888;
+    -fx-background-radius: 20; -fx-border-color: transparent; -fx-padding: 10 15;
 }
+.message-input:focused { -fx-background-color: #333333; -fx-border-color: #555555; }
 
-/* Hover effect */
-.list-view .list-cell:filled:hover {
-    -fx-background-color: rgba(255, 255, 255, 0.1);
-    -fx-cursor: hand;
-}
-
-/* Selected User */
-.list-view .list-cell:filled:selected {
-    -fx-background-color: -fx-accent-color;
+/* UPDATE: Send Button is now Green (#27ae60) */
+.send-btn {
+    -fx-background-color: #27ae60;
     -fx-text-fill: white;
-    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 5, 0, 0, 2);
+    -fx-background-radius: 50;
+    -fx-min-width: 40; -fx-min-height: 40;
+    -fx-cursor: hand; -fx-font-size: 14px;
 }
+.send-btn:hover { -fx-background-color: #2ecc71; } /* Brighter green hover */
 
-/* --- CHAT AREA --- */
-.scroll-pane {
-    -fx-background-color: transparent;
-    -fx-background: transparent; /* Removes default white bg */
-}
-
-.scroll-pane .viewport {
-    -fx-background-color: -fx-chat-bg;
-}
-
-/* Chat Header Bar */
-.header-bar {
-    -fx-background-color: white;
-    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 5, 0, 0, 3);
-    -fx-padding: 15px 20px;
-    -fx-border-color: #e0e0e0;
-    -fx-border-width: 0 0 1px 0;
-}
-
-/* --- INPUT AREA --- */
-.input-bar {
-    -fx-background-color: white;
-    -fx-padding: 15px;
-    -fx-border-color: #e0e0e0;
-    -fx-border-width: 1px 0 0 0;
-}
-
-.text-field {
-    -fx-background-color: #f0f2f5;
-    -fx-background-radius: 20px;
-    -fx-padding: 10px 15px;
-    -fx-prompt-text-fill: #999;
-    -fx-border-width: 0;
-}
-
-.text-field:focused {
-    -fx-background-color: white;
-    -fx-effect: dropshadow(three-pass-box, rgba(0,128,255,0.2), 5, 0, 0, 0);
-    -fx-border-color: -fx-accent-color;
-    -fx-border-radius: 20px;
-}
-
-/* --- BUTTONS --- */
-.button {
-    -fx-background-color: -fx-accent-color;
-    -fx-text-fill: white;
-    -fx-font-weight: bold;
-    -fx-background-radius: 20px;
-    -fx-padding: 8px 20px;
-    -fx-cursor: hand;
-}
-
-.button:hover {
-    -fx-background-color: #0066cc;
-}
-
-.button:pressed {
-    -fx-background-color: #004c99;
-}
-
-/* Secondary Button (Disconnect) */
-.secondary-button {
-    -fx-background-color: rgba(255, 255, 255, 0.1);
-    -fx-text-fill: #ecf0f1;
-    -fx-border-color: rgba(255, 255, 255, 0.2);
-    -fx-border-radius: 5px;
-    -fx-background-radius: 5px;
-    -fx-font-size: 12px;
-}
-.secondary-button:hover {
-    -fx-background-color: rgba(255, 82, 82, 0.8); /* Red on hover */
-    -fx-border-color: transparent;
-}
-
-/* --- SCROLLBAR (Make it modern and thin) --- */
-.scroll-bar:vertical {
-    -fx-background-color: transparent;
-    -fx-pref-width: 10;
-}
-.scroll-bar:vertical .thumb {
-    -fx-background-color: #ccc;
-    -fx-background-radius: 5em;
-}
-.scroll-bar:vertical .thumb:hover {
-    -fx-background-color: #999;
-}
+/* SCROLLBARS */
+.scroll-pane > .viewport { -fx-background-color: transparent; }
+.scroll-bar:vertical { -fx-background-color: transparent; }
+.scroll-bar:vertical .thumb { -fx-background-color: #333333; -fx-background-radius: 10; }

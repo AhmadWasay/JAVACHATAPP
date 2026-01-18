@@ -60,6 +60,7 @@ public class ClientHandler implements Runnable {
                 String line = in.readLine();
                 if (line == null) return; 
 
+                // 1. STANDARD LOGIN (This was missing!)
                 if (line.startsWith(Protocol.CLIENT_PREFIX + Protocol.LOGIN)) {
                      if (handleLogin(line)) {
                          authenticated = true;
@@ -166,12 +167,15 @@ public class ClientHandler implements Runnable {
         }
     }
 
+    // --- EXISTING METHODS (Kept same) ---
+
     private void handleCheckLogin(String line) {
         String[] parts = line.split(" ", 3);
         if (parts.length < 3) return;
         String userRaw = parts[1];
         String pass = parts[2];
 
+        // Only send success/fail, do NOT set authenticated=true yet (Client must switch scenes first)
         if (DatabaseManager.checkLogin(userRaw, pass) != null) {
             sendMessage(Protocol.SERVER_PREFIX + Protocol.LOGIN_SUCCESS);
         } else {
@@ -238,7 +242,7 @@ public class ClientHandler implements Runnable {
                  if (sent) {
                      sendMessage(Protocol.SERVER_PREFIX + "MSG " + "Me" + " -> " + target + ": " + msg);
                  } else {
-                     sendMessage(Protocol.SERVER_PREFIX + "MSG " + "[System]" + " User '" + target + "' is offline. Message saved to history.");
+                     sendMessage(Protocol.SERVER_PREFIX + "MSG " + "[System]" + " User '" + target + "' is offline. They will receive this message when they log in.");
                  }
              }
         }

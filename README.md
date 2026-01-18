@@ -1,18 +1,17 @@
-## Getting Started
+# JavaChat: Multithreaded Chat Application
 
-Welcome to the VS Code Java world. Here is a guideline to help you get started to write Java code in Visual Studio Code.
+A real-time chat application built from scratch using Java Sockets, Swing/JavaFX, and MySQL. It supports private messaging, persistent chat history, and secure email verification (OTP).
 
-## Folder Structure
+🚀 Key Features:
 
-The workspace contains two folders by default, where:
+Real-time Communication: TCP Socket programming with multithreaded client handling.
 
-- `src`: the folder to maintain sources
-- `lib`: the folder to maintain dependencies
+Security: User authentication with OTP Email Verification (JavaMail API).
 
-Meanwhile, the compiled output files will be generated in the `bin` folder by default.
+Persistence: MySQL database stores users and chat history.
 
-> If you want to customize the folder structure, open `.vscode/settings.json` and update the related settings there.
+Smart UI: Dynamic interface that handles login, registration, and live chat.
 
-## Dependency Management
+🛠️ Tech Stack: Java, MySQL, JDBC, Java Sockets, JavaMail.
 
-The `JAVA PROJECTS` view allows you to manage your dependencies. More details can be found [here](https://github.com/microsoft/vscode-java-dependency#manage-dependencies).
+![alt text](image.png)

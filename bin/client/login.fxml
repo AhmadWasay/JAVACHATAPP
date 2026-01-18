@@ -1,93 +1,64 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.Hyperlink?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.PasswordField?>
-<?import javafx.scene.control.TextField?>
-<?import javafx.scene.layout.ColumnConstraints?>
-<?import javafx.scene.layout.GridPane?>
-<?import javafx.scene.layout.RowConstraints?>
-<?import javafx.scene.layout.StackPane?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Font?>
 
-<StackPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.LoginController" 
-           style="-fx-background-color: #f0f2f5;">
-    
-    <GridPane alignment="CENTER">
-        <columnConstraints>
-            <ColumnConstraints hgrow="ALWAYS" percentWidth="55.0" halignment="RIGHT"/>
-            <ColumnConstraints hgrow="ALWAYS" percentWidth="45.0" halignment="LEFT"/>
-        </columnConstraints>
-        <rowConstraints>
-            <RowConstraints vgrow="ALWAYS" />
-        </rowConstraints>
+<HBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" 
+      fx:controller="client.LoginController" styleClass="main-background" alignment="CENTER">
 
-        <VBox alignment="CENTER_LEFT" spacing="15.0" style="-fx-padding: 0 40 0 60;" GridPane.columnIndex="0">
-            <Label text="JavaChat" textFill="#1877f2">
-                <font><Font name="System Bold" size="64.0" /></font> </Label>
-            <Label text="Connect with friends and the world around you." 
-                   wrapText="true" textFill="#1c1e21" maxWidth="500">
-                <font><Font size="28.0" /></font>
-            </Label>
-        </VBox>
+    <VBox alignment="CENTER_LEFT" spacing="10" maxWidth="600" HBox.hgrow="ALWAYS" style="-fx-padding: 0 0 0 100;">
+        <Label text="Java Chat" styleClass="brand-logo"/>
+        <Label text="Connect with the world around you on Java Chat." 
+               wrapText="true" styleClass="brand-tagline" maxWidth="500"/>
+    </VBox>
 
-        <StackPane alignment="CENTER_LEFT" style="-fx-padding: 0 60 0 20;" GridPane.columnIndex="1">
-            
-            <VBox fx:id="loginPane" alignment="CENTER" spacing="15.0" maxWidth="380"
-                  style="-fx-background-color: white; -fx-padding: 30; -fx-background-radius: 8; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.15), 10, 0, 0, 5);">
+    <VBox alignment="CENTER" HBox.hgrow="ALWAYS">
+        <StackPane>
+            <VBox fx:id="loginPane" alignment="CENTER" spacing="15.0" maxWidth="380" styleClass="login-card">
                 
-                <TextField fx:id="ipField" promptText="Server IP (e.g. localhost)" text="localhost" styleClass="login-field"/>
-                <TextField fx:id="loginUserField" promptText="Email or Phone Number" styleClass="login-field"/>
-                <PasswordField fx:id="loginPassField" promptText="Password" styleClass="login-field"/>
+                <TextField fx:id="ipField" promptText="Server IP Address" text="localhost" styleClass="input-field"/>
                 
-                <Button fx:id="loginBtn" text="Log In" maxWidth="Infinity" styleClass="fb-blue-button"/>
+                <TextField fx:id="loginUserField" promptText="Username" styleClass="input-field"/>
+                <PasswordField fx:id="loginPassField" promptText="Password" styleClass="input-field"/>
                 
-                <Hyperlink fx:id="forgotPasswordLink" text="Forgot Password?" style="-fx-text-fill: #1877f2; -fx-font-size: 14px;"/>
+                <Button fx:id="loginBtn" text="Link Start" maxWidth="Infinity" styleClass="btn-primary"/>
                 
-                <Label style="-fx-border-color: #dadde1; -fx-border-width: 1 0 0 0; -fx-padding: 10 0 0 0;" maxWidth="Infinity"/>
+                <Hyperlink fx:id="forgotPasswordLink" text="Forgot password?" styleClass="link-blue"/>
                 
-                <Button fx:id="goToRegisterBtn" text="Create new account" styleClass="fb-green-button"/>
+                <Separator maxWidth="300" style="-fx-padding: 10 0;"/>
+                
+                <Button fx:id="goToRegisterBtn" text="Create New Account" styleClass="btn-green"/>
             </VBox>
 
-            <VBox fx:id="registerPane" visible="false" alignment="CENTER" spacing="15.0" maxWidth="380"
-                  style="-fx-background-color: white; -fx-padding: 30; -fx-background-radius: 8; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.15), 10, 0, 0, 5);">
+            <VBox fx:id="registerPane" visible="false" alignment="CENTER" spacing="15.0" maxWidth="380" styleClass="login-card">
+                <Label text="Sign Up" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: white;"/>
+                <Label text="It's quick and easy." style="-fx-text-fill: #606770; -fx-font-size: 14px;"/>
                 
-                <Label text="Sign Up" textFill="#1c1e21">
-                    <font><Font name="System Bold" size="32.0" /></font>
-                </Label>
-                <Label text="It's quick and easy." textFill="#606770" />
+                <Separator maxWidth="340"/>
+
+                <TextField fx:id="regUserField" promptText="Username" styleClass="input-field"/>
+                <TextField fx:id="regEmailField" promptText="Email Address" styleClass="input-field"/>
+                <PasswordField fx:id="regPassField" promptText="New Password" styleClass="input-field"/>
                 
-                <TextField fx:id="regUserField" promptText="Username" styleClass="login-field"/>
-                <PasswordField fx:id="regPassField" promptText="New Password" styleClass="login-field"/>
-                <TextField fx:id="regEmailField" promptText="Email Address" styleClass="login-field"/>
-                
-                <Button fx:id="registerBtn" text="Sign Up" maxWidth="Infinity" styleClass="fb-green-button" style="-fx-font-size: 18px;"/>
-                
-                <Hyperlink fx:id="backToLoginBtn1" text="Already have an account?" style="-fx-text-fill: #1877f2;"/>
+                <Label text="By clicking Sign Up, you agree to our Terms." wrapText="true" style="-fx-font-size: 11px; -fx-text-fill: #777;" maxWidth="340"/>
+
+                <Button fx:id="registerBtn" text="Sign Up" maxWidth="200" styleClass="btn-green"/>
+                <Hyperlink fx:id="backToLoginBtn1" text="Already have an account?" styleClass="link-blue"/>
             </VBox>
 
-            <VBox fx:id="otpPane" visible="false" alignment="CENTER" spacing="15.0" maxWidth="380"
-                  style="-fx-background-color: white; -fx-padding: 30; -fx-background-radius: 8; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.15), 10, 0, 0, 5);">
+            <VBox fx:id="otpPane" visible="false" alignment="CENTER" spacing="15.0" maxWidth="380" styleClass="login-card">
+                <Label text="Verify Account" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: white;"/>
+                <Label text="Enter your email to receive a code." style="-fx-text-fill: #606770;"/>
                 
-                <Label text="Enter Code" textFill="#1c1e21">
-                    <font><Font name="System Bold" size="24.0" /></font>
-                </Label>
-                <Label text="We sent a code to your email." textFill="#606770"/>
+                <TextField fx:id="otpEmailField" promptText="Email Address" styleClass="input-field"/>
                 
-                <TextField fx:id="otpEmailField" promptText="Enter Code" styleClass="login-field"/>
-                
-                <Button fx:id="sendOtpBtn" text="Verify" maxWidth="Infinity" styleClass="fb-blue-button"/>
-                
-                <Hyperlink fx:id="backToLoginBtn2" text="Cancel" style="-fx-text-fill: #1877f2;"/>
+                <Button fx:id="sendOtpBtn" text="Send Code" maxWidth="Infinity" styleClass="btn-primary"/>
+                <Button fx:id="backToLoginBtn2" text="Cancel" styleClass="btn-secondary"/>
             </VBox>
-
         </StackPane>
-    </GridPane>
+    </VBox>
 
-    <Label fx:id="globalErrorLabel" text="Error Message" visible="false" StackPane.alignment="TOP_CENTER" 
-           style="-fx-padding: 15; -fx-background-color: #fa3e3e; -fx-background-radius: 0 0 8 8; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px;">
-    </Label>
-
-</StackPane>
+    <Label fx:id="globalErrorLabel" text="Error Message" visible="false" 
+           style="-fx-background-color: #fa3e3e; -fx-text-fill: white; -fx-padding: 10 20; -fx-background-radius: 5; -fx-font-weight: bold;"
+           translateX="-50" translateY="-50"/>
+</HBox>

@@ -1,56 +1,47 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ListView?>
-<?import javafx.scene.control.ScrollPane?>
-<?import javafx.scene.control.TextField?>
-<?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.Region?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Font?>
 
 <BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.ChatController">
-    
+
     <left>
-        <VBox prefWidth="260.0" spacing="10" style="-fx-background-color: #2c3e50; -fx-padding: 15;">
-            <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label text="JavaChat" textFill="white">
-                    <font><Font name="Segoe UI Bold" size="18.0"/></font>
+        <VBox prefWidth="280" styleClass="sidebar">
+            <HBox alignment="CENTER_LEFT" styleClass="sidebar-header">
+                <Label text="JavaChat" textFill="WHITE">
+                    <font><Font name="Segoe UI Bold" size="20.0" /></font>
                 </Label>
-                <Region HBox.hgrow="ALWAYS" />
-                
-                <Button fx:id="disconnectButton" text="Logout" onAction="#disconnect" styleClass="secondary-button"/>
             </HBox>
-            
-            <Label text="ACTIVE CONVERSATIONS" textFill="#95a5a6" style="-fx-font-size: 10px; -fx-font-weight: bold; -fx-padding: 10 0 5 0;"/>
             
             <ListView fx:id="usersList" VBox.vgrow="ALWAYS" styleClass="list-view"/>
         </VBox>
     </left>
 
     <center>
-        <VBox style="-fx-background-color: #eef1f4;">
+        <VBox styleClass="chat-area-background">
             
-            <HBox alignment="CENTER_LEFT" styleClass="header-bar" spacing="15">
-                <Label fx:id="statusLabel" text="Universal Chat" textFill="#2c3e50">
-                    <font><Font name="Segoe UI Bold" size="16.0"/></font>
-                </Label>
+            <HBox alignment="CENTER_LEFT" styleClass="chat-header">
+                 <Label fx:id="statusLabel" text="Global Chat">
+                    <font><Font name="Segoe UI Bold" size="16.0" /></font>
+                 </Label>
+                 
+                 <TextField fx:id="nameField" visible="false" managed="false"/>
+                 <TextField fx:id="hostField" visible="false" managed="false"/>
+                 <TextField fx:id="portField" visible="false" managed="false"/>
+                 <Button fx:id="connectButton" visible="false" managed="false"/>
+                 <Button fx:id="disconnectButton" visible="false" managed="false"/>
             </HBox>
-            
-            <ScrollPane fx:id="scrollPane" fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="scroll-pane" hbarPolicy="NEVER">
-                <VBox fx:id="chatBox" spacing="15.0" style="-fx-padding: 20;">
-                    </VBox>
+
+            <ScrollPane fx:id="scrollPane" fitToWidth="true" VBox.vgrow="ALWAYS">
+                <content>
+                    <VBox fx:id="chatBox" spacing="10" style="-fx-padding: 20;" />
+                </content>
             </ScrollPane>
-            
-            <HBox alignment="CENTER" spacing="10.0" styleClass="input-bar">
-                <TextField fx:id="inputField" promptText="Type a message..." HBox.hgrow="ALWAYS"/>
-                <Button fx:id="sendButton" text="➤" style="-fx-font-size: 16px; -fx-padding: 8 15; -fx-shape: 'M2 21l21-9L2 3v7l15 2-15 2z';"/> 
+
+            <HBox spacing="10" styleClass="chat-footer">
+                <TextField fx:id="inputField" promptText="Type a message..." HBox.hgrow="ALWAYS" styleClass="message-input"/>
+                <Button fx:id="sendButton" text="➤" styleClass="send-btn"/>
             </HBox>
-            
         </VBox>
     </center>
-    
 </BorderPane>

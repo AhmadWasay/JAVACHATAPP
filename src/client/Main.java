@@ -2,25 +2,33 @@ package client;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 public class Main extends Application {
-   @Override
-    public void start(Stage stage) throws Exception {
-        FXMLLoader fxml = new FXMLLoader(getClass().getResource("login.fxml"));
-        Scene scene = new Scene(fxml.load());
-        
-        if (getClass().getResource("styles.css") != null) {
-            scene.getStylesheets().add(getClass().getResource("styles.css").toExternalForm());
+    @Override
+    public void start(Stage stage) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("login.fxml"));
+            Parent root = loader.load();
+            
+            Scene scene = new Scene(root);
+            
+            // 1. Add CSS to Login Scene immediately
+            String css = this.getClass().getResource("styles.css").toExternalForm();
+            scene.getStylesheets().add(css);
+
+            stage.setTitle("JavaChat Enterprise");
+            stage.setScene(scene);
+            
+            // 2. FORCE FULL SCREEN
+            stage.setMaximized(true); 
+            
+            stage.show();
+        } catch(Exception e) {
+            e.printStackTrace();
         }
-        
-        stage.setTitle("JavaChat");
-        stage.setScene(scene);
-        
-        stage.setMaximized(true); 
-        
-        stage.show();
     }
 
     public static void main(String[] args) {
