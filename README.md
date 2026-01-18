@@ -1,4 +1,4 @@
-# JavaChat: Multithreaded Chat Application
+# Java Chat: Multithreaded Chat Application
 
 A real-time chat application built from scratch using Java Sockets, Swing/JavaFX, and MySQL. It supports private messaging, persistent chat history, and secure email verification (OTP).
 
@@ -15,3 +15,5 @@ Smart UI: Dynamic interface that handles login, registration, and live chat.
 🛠️ Tech Stack: Java, MySQL, JDBC, Java Sockets, JavaMail.
 
 ![alt text](image.png)
+
+![alt text](image-1.png)
