@@ -1,19 +1,25 @@
 # Java Chat: Multithreaded Chat Application
 
-A real-time chat application built from scratch using Java Sockets, Swing/JavaFX, and MySQL. It supports private messaging, persistent chat history, and secure email verification (OTP).
+A robust, multi-threaded desktop messaging application built to demonstrate real-time networking and secure data persistence.
 
-🚀 Key Features:
+## 🌟 Key Features
+* **Real-Time Communication:** Low-latency messaging using TCP Socket programming.
+* **Secure Authentication:** Custom implementation of 2FA (Two-Factor Authentication) using Email OTP.
+* **Private & Global Chat:** Route messages to specific users or broadcast to the entire network.
+* **Persistent History:** MySQL integration ensures chat logs and user data survive server restarts.
+* **Modern UI:** Responsive, dark-themed interface built with JavaFX and CSS.
 
-Real-time Communication: TCP Socket programming with multithreaded client handling.
+## 🛠 Tech Stack
+* **Language:** Java (JDK 21+)
+* **GUI:** JavaFX (FXML & CSS)
+* **Database:** MySQL
+* **Architecture:** Client-Server (Multi-threaded)
 
-Security: User authentication with OTP Email Verification (JavaMail API).
+## 🤝 Collaboration
+Built in collaboration with classmate Rana Abdullah.
 
-Persistence: MySQL database stores users and chat history.
+Note: Download javafx and add it's lib libraries to the Reference Libraries of the project and enjoy.
 
-Smart UI: Dynamic interface that handles login, registration, and live chat.
+![alt text](<Screenshot (179).png>)
 
-🛠️ Tech Stack: Java, MySQL, JDBC, Java Sockets, JavaMail.
-
-![alt text](image.png)
-
-![alt text](image-1.png)
+![alt text](<Screenshot (180).png>)

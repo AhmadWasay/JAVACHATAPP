@@ -8,8 +8,8 @@ import java.util.List;
 public class DatabaseManager {
 
     private static final String DB_URL = "jdbc:mysql://localhost:3306/javachat";
-    private static final String DB_USER = "root";
-    private static final String DB_PASS = "1234";
+    private static final String DB_USER = "root"; // your database username
+    private static final String DB_PASS = "1234"; // your database password
 
     static {
         try {
