@@ -43,24 +43,21 @@ public class ClientHandler implements Runnable {
                 String line = in.readLine();
                 if (line == null) return; 
 
-                // Strip Prefixes (C: or Protocol)
                 String cmd = line;
                 if (cmd.startsWith("C:")) cmd = cmd.substring(2).trim();
                 else if (cmd.startsWith(Protocol.CLIENT_PREFIX)) cmd = cmd.substring(Protocol.CLIENT_PREFIX.length()).trim();
 
                 if (cmd.startsWith("LOGIN")) { 
-                     // Full Login (For Chat Window)
                      if (handleLogin(cmd)) authenticated = true;
                 }
                 else if (cmd.startsWith("CHECK_LOGIN")) {
-                    // Silent Login (For Login Screen - No Broadcast)
                     handleCheckLogin(cmd);
                 }
                 else if (cmd.startsWith("REGISTER")) {
                     handleRegisterRequest(cmd); 
                 }
                 else if (cmd.startsWith("VERIFY_OTP")) {
-                    if (handleVerifyRegistrationOTP(cmd)) { /* Success */ }
+                    if (handleVerifyRegistrationOTP(cmd)) { }
                 }
                 else if (cmd.startsWith("REQUEST_LOGIN_OTP")) {
                     handleRequestLoginOTP(cmd);
@@ -74,7 +71,6 @@ public class ClientHandler implements Runnable {
                 }
             }
 
-            // --- USER JOINED CHAT (Only happens after full LOGIN) ---
             if (username == null) return; 
             inChat = true; 
             server.broadcast("S:USER_JOINED " + username, this);
@@ -92,8 +88,16 @@ public class ClientHandler implements Runnable {
                 
                 if (content.trim().isEmpty()) continue;
 
-                DatabaseManager.saveMessage(this.username, "ALL", content); 
-                server.broadcast("S:MSG " + username + " " + content, this);
+                // --- LOGIC TO HANDLE PMs ---
+                if (content.startsWith("/pm ") || content.startsWith("PM ")) {
+                    handlePrivateMessageCommand(content);
+                } else {
+                    // --- LOGIC FOR PUBLIC MESSAGES ---
+                    DatabaseManager.saveMessage(this.username, "ALL", content); 
+                    
+                    // FIX: Pass 'null' so the Sender (You) also gets the message back!
+                    server.broadcast("S:MSG " + username + " " + content, null);
+                }
             }
         } catch (IOException e) {
             System.err.println("Client disconnected: " + username);
@@ -102,15 +106,37 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    // --- LOGIC METHODS ---
+    private void handlePrivateMessageCommand(String line) {
+        // Format: "/pm TargetUser Message..." or "PM TargetUser Message..."
+        String clean = line.substring(line.indexOf(' ') + 1); 
+        String[] parts = clean.split(" ", 2);
+        
+        if (parts.length < 2) {
+            sendRawMessage("S:MSG [System] Invalid PM format.");
+            return;
+        }
+        
+        String target = parts[0];
+        String msg = parts[1];
+        
+        DatabaseManager.saveMessage(this.username, target, msg);
+        boolean sent = server.sendPrivateMessage(this.username, target, msg);
+        
+        if (sent) {
+            // Echo to Sender so they see it on their right side
+            sendRawMessage("S:MSG Me -> " + target + ": " + msg);
+        } else {
+            sendRawMessage("S:MSG [System] User '" + target + "' is offline.");
+        }
+    }
 
+    // --- EXISTING AUTH METHODS (Unchanged) ---
     private void handleCheckLogin(String line) {
         String[] parts = line.split(" ", 3);
         if (parts.length < 3) return;
         String userRaw = parts[1]; String pass = parts[2].trim();
         String officialName = DatabaseManager.checkLogin(userRaw, pass);
         if (officialName != null) {
-            // Respond Success, but DO NOT set 'this.username' or break loop
             sendRawMessage("LOGIN_SUCCESS " + officialName);
         } else {
             sendRawMessage("LOGIN_FAIL");
@@ -121,9 +147,7 @@ public class ClientHandler implements Runnable {
         String[] parts = line.split(" ", 3);
         if (parts.length < 3) return false;
         String userRaw = parts[1]; String pass = parts[2].trim(); 
-        
         if (pass.equals("OTP_ACCESS")) { this.username = userRaw; return true; }
-
         String officialName = DatabaseManager.checkLogin(userRaw, pass);
         if (officialName != null) {
             this.username = officialName;
@@ -138,15 +162,12 @@ public class ClientHandler implements Runnable {
         String[] parts = line.split(" ", 4);
         if (parts.length < 4) return;
         String user = parts[1]; String pass = parts[2]; String email = parts[3];
-
         if (DatabaseManager.checkLogin(user, "dummy") != null) {
             sendRawMessage("ERROR Username taken"); return;
         }
-
         int randomPin = (int) (Math.random() * 900000) + 100000;
         String code = String.valueOf(randomPin);
         pendingRegistrations.put(email, new RegistrationData(user, pass, code));
-
         new Thread(() -> EmailService.sendOTP(email, code)).start();
         sendRawMessage("OTP_REQ");
     }
@@ -155,7 +176,6 @@ public class ClientHandler implements Runnable {
         String[] parts = line.split(" ", 3);
         if (parts.length < 3) return false;
         String email = parts[1]; String code = parts[2];
-
         RegistrationData data = pendingRegistrations.get(email);
         if (data != null && data.code.equals(code)) {
             if (DatabaseManager.registerUser(data.user, data.pass, email)) {
@@ -171,14 +191,11 @@ public class ClientHandler implements Runnable {
         String[] parts = line.trim().split(" ", 2);
         if (parts.length < 2) return;
         String email = parts[1].trim();
-        
         String foundUsername = DatabaseManager.getUsernameByEmail(email);
         if (foundUsername == null) { sendRawMessage("ERROR Email not found."); return; }
-        
         int randomPin = (int) (Math.random() * 900000) + 100000;
         String code = String.valueOf(randomPin);
         sharedLoginOtp.put(email, code);
-        
         new Thread(() -> EmailService.sendOTP(email, code)).start();
         sendRawMessage("OTP_SENT");
     }
@@ -187,7 +204,6 @@ public class ClientHandler implements Runnable {
         String[] parts = line.trim().split(" ", 3);
         if (parts.length < 3) return false;
         String email = parts[1].trim(); String inputCode = parts[2].trim();
-        
         String realCode = sharedLoginOtp.get(email);
         if (realCode != null && realCode.equals(inputCode)) {
             sharedLoginOtp.remove(email); 

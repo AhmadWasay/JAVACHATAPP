@@ -148,11 +148,19 @@ public class ChatController {
         chatBox.getChildren().clear();
         for (ChatMessage msg : allMessages) {
             boolean showIt = false;
+            
             if (currentChatTarget.equals(UNIVERSAL_CHAT)) {
-                if (msg.type.equals("PUBLIC")) showIt = true;
+                // In Universal Chat, ONLY show Public messages
+                if (msg.type.equals("PUBLIC")) {
+                    showIt = true;
+                }
             } else {
+                // In Private Chat (e.g., Abdullah), show messages WHERE:
+                // 1. Type is PRIVATE
+                // 2. AND (Sender is Abdullah OR Target is Abdullah)
                 if (msg.type.equals("PRIVATE")) {
-                    if (msg.target.equals(currentChatTarget) || msg.sender.equals(currentChatTarget)) {
+                    if (msg.sender.equalsIgnoreCase(currentChatTarget) || 
+                        msg.target.equalsIgnoreCase(currentChatTarget)) {
                         showIt = true;
                     }
                 }
@@ -192,16 +200,18 @@ public class ChatController {
         if (text.isEmpty()) return;
 
         if (currentChatTarget.equals(UNIVERSAL_CHAT)) {
+            // Send normal public message
             client.sendText(text);
+            // Manually add to UI for instant feedback (Server will echo, but this feels faster)
+            // Note: If you add it here, the Server Echo might duplicate it. 
+            // Better to rely on Server Echo for Public messages.
         } else {
+            // Send Private Command
+            // FIX: Send "/pm" so the Server detects it!
             client.sendText("/pm " + currentChatTarget + " " + text);
         }
 
-       ChatMessage myMsg = new ChatMessage("Me", text, "PUBLIC", currentChatTarget, true);
-        
-        allMessages.add(myMsg);
-        addBubbleToUI(myMsg);
-
+        // Clear input immediately
         inputField.clear();
     }
 
