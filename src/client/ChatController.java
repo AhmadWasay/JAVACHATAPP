@@ -206,6 +206,7 @@ public class ChatController {
     }
 
     // In ChatController.java
+    // --- FIXED: Removed Square Borders ---
     private void addBubbleToUI(ChatMessage msg) {
         HBox container = new HBox();
         
@@ -224,8 +225,10 @@ public class ChatController {
             bubble.setStyle(baseStyle + " -fx-text-fill: white; -fx-background-color: #404040; -fx-background-radius: 18 18 0 18;");
         } else {
             container.setAlignment(Pos.CENTER_LEFT);
-            // Them: Very Dark Gray (#1A1A1A) - White Text - Subtle Border
-            bubble.setStyle(baseStyle + " -fx-text-fill: white; -fx-background-color: #1A1A1A; -fx-background-radius: 18 18 18 0; -fx-border-color: #333333; -fx-border-width: 1;");
+            // Them: Very Dark Gray (#1A1A1A) - White Text
+            // FIX: Removed '-fx-border-color' so the square rectangle is gone.
+            // If you really want a border, you MUST add: -fx-border-radius: 18 18 18 0;
+            bubble.setStyle(baseStyle + " -fx-text-fill: white; -fx-background-color: #1A1A1A; -fx-background-radius: 18 18 18 0;");
         }
         
         VBox bubbleContent = new VBox(5);
