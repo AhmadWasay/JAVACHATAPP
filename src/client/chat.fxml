@@ -3,45 +3,49 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.ChatController">
+<AnchorPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" 
+            fx:controller="client.ChatController"
+            prefHeight="768.0" prefWidth="1024.0">
 
-    <left>
-        <VBox prefWidth="280" styleClass="sidebar">
-            <HBox alignment="CENTER_LEFT" styleClass="sidebar-header">
-                <Label text="JavaChat" textFill="WHITE">
-                    <font><Font name="Segoe UI Bold" size="20.0" /></font>
-                </Label>
-            </HBox>
-            
-            <ListView fx:id="usersList" VBox.vgrow="ALWAYS" styleClass="list-view"/>
-        </VBox>
-    </left>
+    <SplitPane dividerPositions="0.25" 
+               AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" 
+               AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"
+               style="-fx-box-border: transparent; -fx-background-color: transparent;">
+        
+        <items>
+            <VBox minWidth="200" maxWidth="300" styleClass="sidebar">
+                <HBox alignment="CENTER_LEFT" styleClass="sidebar-header" minHeight="50" style="-fx-padding: 10;">
+                    <Label text="JavaChat" textFill="WHITE">
+                        <font><Font name="Segoe UI Bold" size="20.0" /></font>
+                    </Label>
+                </HBox>
+                <ListView fx:id="usersList" VBox.vgrow="ALWAYS" styleClass="list-view"/>
+            </VBox>
 
-    <center>
-        <VBox styleClass="chat-area-background">
-            
-            <HBox alignment="CENTER_LEFT" styleClass="chat-header">
-                 <Label fx:id="statusLabel" text="Global Chat">
-                    <font><Font name="Segoe UI Bold" size="16.0" /></font>
-                 </Label>
-                 
-                 <TextField fx:id="nameField" visible="false" managed="false"/>
-                 <TextField fx:id="hostField" visible="false" managed="false"/>
-                 <TextField fx:id="portField" visible="false" managed="false"/>
-                 <Button fx:id="connectButton" visible="false" managed="false"/>
-                 <Button fx:id="disconnectButton" visible="false" managed="false"/>
-            </HBox>
+            <VBox styleClass="chat-area-background">
+                <HBox alignment="CENTER_LEFT" styleClass="chat-header" minHeight="50" style="-fx-padding: 10;">
+                     <Label fx:id="statusLabel" text="Global Chat">
+                        <font><Font name="Segoe UI Bold" size="16.0" /></font>
+                     </Label>
+                     
+                     <TextField fx:id="nameField" visible="false" managed="false"/>
+                     <TextField fx:id="hostField" visible="false" managed="false"/>
+                     <TextField fx:id="portField" visible="false" managed="false"/>
+                     <Button fx:id="connectButton" visible="false" managed="false"/>
+                     <Button fx:id="disconnectButton" visible="false" managed="false"/>
+                </HBox>
 
-            <ScrollPane fx:id="scrollPane" fitToWidth="true" VBox.vgrow="ALWAYS">
-                <content>
-                    <VBox fx:id="chatBox" spacing="10" style="-fx-padding: 20;" />
-                </content>
-            </ScrollPane>
+                <ScrollPane fx:id="scrollPane" fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent;">
+                    <content>
+                        <VBox fx:id="chatBox" spacing="10" style="-fx-padding: 20; -fx-background-color: transparent;" />
+                    </content>
+                </ScrollPane>
 
-            <HBox spacing="10" styleClass="chat-footer">
-                <TextField fx:id="inputField" promptText="Type a message..." HBox.hgrow="ALWAYS" styleClass="message-input"/>
-                <Button fx:id="sendButton" text="➤" styleClass="send-btn"/>
-            </HBox>
-        </VBox>
-    </center>
-</BorderPane>
+                <HBox spacing="10" styleClass="chat-footer" minHeight="60" alignment="CENTER_LEFT" style="-fx-padding: 10;">
+                    <TextField fx:id="inputField" promptText="Type a message..." HBox.hgrow="ALWAYS" styleClass="message-input"/>
+                    <Button fx:id="sendButton" text="➤" styleClass="send-btn" minWidth="40"/>
+                </HBox>
+            </VBox>
+        </items>
+    </SplitPane>
+</AnchorPane>

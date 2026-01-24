@@ -46,13 +46,22 @@
                 <Hyperlink fx:id="backToLoginBtn1" text="Already have an account?" styleClass="link-blue"/>
             </VBox>
 
-            <VBox fx:id="otpPane" visible="false" alignment="CENTER" spacing="15.0" maxWidth="380" styleClass="login-card">
+           <VBox fx:id="otpPane" visible="false" alignment="CENTER" spacing="15.0" maxWidth="380" styleClass="login-card">
                 <Label text="Verify Account" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: white;"/>
-                <Label text="Enter your email to receive a code." style="-fx-text-fill: #606770;"/>
                 
-                <TextField fx:id="otpEmailField" promptText="Email Address" styleClass="input-field"/>
-                
-                <Button fx:id="sendOtpBtn" text="Send Code" maxWidth="Infinity" styleClass="btn-primary"/>
+                <VBox fx:id="otpStep1Box" alignment="CENTER" spacing="15.0" maxWidth="Infinity">
+                    <Label text="Enter your email to receive a code." style="-fx-text-fill: #bbbbbb;"/>
+                    <TextField fx:id="otpEmailField" promptText="Email Address" styleClass="input-field"/>
+                    <Button fx:id="sendOtpBtn" text="Send Code" maxWidth="Infinity" styleClass="btn-primary"/>
+                </VBox>
+
+                <VBox fx:id="otpStep2Box" alignment="CENTER" spacing="15.0" maxWidth="Infinity" visible="false" managed="false">
+                    <Label text="Enter the code sent to your email." style="-fx-text-fill: #bbbbbb;"/>
+                    <TextField fx:id="otpCodeField" promptText="Verification Code" styleClass="input-field"/>
+                    <Button fx:id="verifyOtpBtn" text="Verify" maxWidth="Infinity" styleClass="btn-green"/>
+                </VBox>
+
+                <Separator maxWidth="300" style="-fx-padding: 10 0;"/>
                 <Button fx:id="backToLoginBtn2" text="Cancel" styleClass="btn-secondary"/>
             </VBox>
         </StackPane>

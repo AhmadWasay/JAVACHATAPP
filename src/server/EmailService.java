@@ -26,8 +26,8 @@ public class EmailService {
             Message message = new MimeMessage(session);
             message.setFrom(new InternetAddress(MY_EMAIL));
             message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(recipient));
-            message.setSubject("JavaChat Verification Code");
-            message.setText("Your OTP code is garbage, just like you... Just kidding it's: " + otpCode + "\n\nWelcome to JavaChat!😏");
+            message.setSubject("Java Chat Verification Code");
+            message.setText("Your OTP code is garbage, just like you... Just kidding it's " + otpCode + "\n\nWelcome to JavaChat!😏");
 
             Transport.send(message);
             System.out.println("OTP sent to " + recipient);

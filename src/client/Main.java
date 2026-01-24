@@ -12,20 +12,20 @@ public class Main extends Application {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("login.fxml"));
             Parent root = loader.load();
-            
             Scene scene = new Scene(root);
             
-            // 1. Add CSS to Login Scene immediately
-            String css = this.getClass().getResource("styles.css").toExternalForm();
-            scene.getStylesheets().add(css);
+            try {
+                String css = getClass().getResource("styles.css").toExternalForm();
+                scene.getStylesheets().add(css);
+            } catch (Exception e) { System.out.println("CSS missing"); }
 
             stage.setTitle("JavaChat Enterprise");
             stage.setScene(scene);
             
-            // 2. FORCE FULL SCREEN
-            stage.setMaximized(true); 
-            
             stage.show();
+            
+            stage.setMaximized(true);
+
         } catch(Exception e) {
             e.printStackTrace();
         }

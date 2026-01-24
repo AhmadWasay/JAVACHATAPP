@@ -1,6 +1,5 @@
 package client;
 
-import common.Protocol;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -9,220 +8,234 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-
-import java.io.*;
+import java.io.IOException;
 import java.net.Socket;
+import java.io.PrintWriter;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 
 public class LoginController {
 
-    // Panes
-    @FXML private VBox loginPane;
-    @FXML private VBox registerPane;
-    @FXML private VBox otpPane;
-
-    // Login Fields
-    @FXML private TextField ipField; // NEW: IP Field
-    @FXML private TextField loginUserField;
-    @FXML private PasswordField loginPassField;
-    @FXML private Button loginBtn;
-    @FXML private Hyperlink forgotPasswordLink;
-    @FXML private Button goToRegisterBtn;
-
-    // Register Fields
-    @FXML private TextField regUserField;
-    @FXML private PasswordField regPassField;
-    @FXML private TextField regEmailField;
-    @FXML private Button registerBtn;
-    @FXML private Hyperlink backToLoginBtn1;
-
-    // Email Login Fields
-    @FXML private TextField otpEmailField;
-    @FXML private Button sendOtpBtn;
+    @FXML private VBox loginPane, registerPane, otpPane;
+    @FXML private VBox otpStep1Box, otpStep2Box; 
+    @FXML private TextField ipField, loginUserField, regUserField, regEmailField, otpEmailField, otpCodeField;
+    @FXML private PasswordField loginPassField, regPassField;
+    @FXML private Button loginBtn, goToRegisterBtn, registerBtn, sendOtpBtn, verifyOtpBtn;
+    @FXML private Hyperlink forgotPasswordLink, backToLoginBtn1; 
     @FXML private Button backToLoginBtn2;
-
     @FXML private Label globalErrorLabel;
 
-    private static final int PORT = 5555;
+    private String serverHost = "localhost";
+    private int serverPort = 5555;
+    
+    private boolean isRegistrationMode = false;
 
     @FXML
     public void initialize() {
-        // Switch Screens
-        goToRegisterBtn.setOnAction(e -> showPane(registerPane));
-        backToLoginBtn1.setOnAction(e -> showPane(loginPane));
-        forgotPasswordLink.setOnAction(e -> showPane(otpPane));
-        backToLoginBtn2.setOnAction(e -> showPane(loginPane));
+        goToRegisterBtn.setOnAction(e -> switchView(registerPane));
+        forgotPasswordLink.setOnAction(e -> {
+            isRegistrationMode = false; 
+            switchView(otpPane);
+            resetOtpUI(); 
+        });
+        
+        if (backToLoginBtn1 != null) backToLoginBtn1.setOnAction(e -> switchView(loginPane));
+        if (backToLoginBtn2 != null) backToLoginBtn2.setOnAction(e -> switchView(loginPane));
 
-        // Actions
-        loginBtn.setOnAction(e -> handleStandardLogin());
-        registerBtn.setOnAction(e -> handleRegistration());
-        sendOtpBtn.setOnAction(e -> handleEmailLogin());
+        loginBtn.setOnAction(e -> handleLogin());
+        registerBtn.setOnAction(e -> handleRegister());
+        sendOtpBtn.setOnAction(e -> handleSendOtp());
+        verifyOtpBtn.setOnAction(e -> handleVerifyOtp());
     }
 
-    private void showPane(VBox pane) {
+    private void switchView(VBox target) {
         loginPane.setVisible(false);
         registerPane.setVisible(false);
         otpPane.setVisible(false);
-        pane.setVisible(true);
+        target.setVisible(true);
         globalErrorLabel.setVisible(false);
     }
-
-    private void showError(String msg) {
-        Platform.runLater(() -> {
-            globalErrorLabel.setText(msg);
-            globalErrorLabel.setVisible(true);
-        });
+    
+    private void resetOtpUI() {
+        if (otpStep1Box != null) { otpStep1Box.setVisible(true); otpStep1Box.setManaged(true); }
+        if (otpStep2Box != null) { otpStep2Box.setVisible(false); otpStep2Box.setManaged(false); }
+        otpEmailField.clear(); otpCodeField.clear();
     }
 
-    // --- Helper to get Host ---
-    private String getHost() {
-        String ip = ipField.getText().trim();
-        return ip.isEmpty() ? "localhost" : ip;
-    }
-
-    private void handleStandardLogin() {
+    // --- 1. LOGIN (FIXED: USES CHECK_LOGIN) ---
+    private void handleLogin() {
         String user = loginUserField.getText().trim();
         String pass = loginPassField.getText().trim();
-        if(user.isEmpty() || pass.isEmpty()) { showError("Enter credentials"); return; }
-        
-        runTask(socket -> {
-            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            out.println(Protocol.CLIENT_PREFIX + Protocol.CHECK_LOGIN + " " + user + " " + pass);
-            String resp = in.readLine();
-            
-            if (resp != null && resp.startsWith(Protocol.SERVER_PREFIX + Protocol.LOGIN_SUCCESS)) {
-                Platform.runLater(() -> loadChat(socket, user, pass));
+        String host = ipField.getText().trim();
+        if(host.isEmpty()) host = "localhost";
+
+        if (user.isEmpty() || pass.isEmpty()) { showError("Enter username & password."); return; }
+
+        // FIX: Use CHECK_LOGIN so we don't trigger "User Joined/Left" broadcast
+        connectAndExecute("C:CHECK_LOGIN " + user + " " + pass, response -> {
+            if (response.startsWith("LOGIN_SUCCESS")) {
+                loadChat(user);
             } else {
-                showError("Invalid username or password");
-                socket.close();
+                showError("Login Failed: " + response);
             }
-        });
+        }, host);
     }
 
-    private void handleRegistration() {
+    // --- 2. REGISTER ---
+    private void handleRegister() {
         String user = regUserField.getText().trim();
         String pass = regPassField.getText().trim();
         String email = regEmailField.getText().trim();
-        if(user.isEmpty() || email.isEmpty()) { showError("Fields required"); return; }
+        String host = ipField.getText().trim();
+        if(host.isEmpty()) host = "localhost";
 
-        runTask(socket -> {
-            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            out.println(Protocol.CLIENT_PREFIX + Protocol.REGISTER + " " + user + " " + pass + " " + email);
-            String resp = in.readLine();
+        if (user.isEmpty() || pass.isEmpty() || email.isEmpty()) { showError("All fields required."); return; }
 
-            if (resp != null && resp.contains("OTP_REQ")) {
-                String code = promptCode("Enter Verification Code", "Code sent to " + email);
-                if(code != null) {
-                    out.println(Protocol.CLIENT_PREFIX + "VERIFY_OTP " + code);
-                    String verifyResp = in.readLine();
-                    if(verifyResp != null && verifyResp.contains("LOGIN_SUCCESS")) {
-                        Platform.runLater(() -> {
-                            showError("Registration Success! Please Login.");
-                            try { socket.close(); } catch(Exception e){}
-                            showPane(loginPane);
-                        });
-                    } else {
-                        showError("Invalid Code");
-                        socket.close();
-                    }
-                }
+        connectAndExecute("C:REGISTER " + user + " " + pass + " " + email, response -> {
+            if (response.startsWith("OTP_REQ")) {
+                isRegistrationMode = true;
+                Platform.runLater(() -> {
+                    switchView(otpPane);
+                    otpStep1Box.setVisible(false); otpStep1Box.setManaged(false);
+                    otpStep2Box.setVisible(true); otpStep2Box.setManaged(true);
+                    showError("OTP sent to " + email);
+                });
             } else {
-                showError("Registration Failed (User exists?)");
-                socket.close();
+                showError("Registration Failed: " + response);
             }
-        });
+        }, host);
     }
 
-    private void handleEmailLogin() {
+    // --- 3. OTP VERIFICATION ---
+    private void handleVerifyOtp() {
+        String code = otpCodeField.getText().trim();
+        String host = ipField.getText().trim();
+        if(host.isEmpty()) host = "localhost";
+        if (code.isEmpty()) return;
+
+        String command;
+        if (isRegistrationMode) {
+            String email = regEmailField.getText().trim();
+            command = "C:VERIFY_OTP " + email + " " + code;
+        } else {
+            String email = otpEmailField.getText().trim();
+            command = "C:VERIFY_LOGIN_OTP " + email + " " + code;
+        }
+
+        connectAndExecute(command, response -> {
+            if (isRegistrationMode) {
+                // Registration Flow
+                if (response.startsWith("REG_SUCCESS")) {
+                    Platform.runLater(() -> {
+                        // FIX: No Popup, just switch and show message
+                        switchView(loginPane);
+                        globalErrorLabel.setStyle("-fx-text-fill: #4CAF50;"); // Green color for success
+                        showError("Account Created! Please Login.");
+                        
+                        // Reset color back to red after a few seconds (optional but good practice)
+                        new Thread(() -> {
+                            try { Thread.sleep(4000); } catch (InterruptedException e) {}
+                            Platform.runLater(() -> globalErrorLabel.setStyle("-fx-text-fill: red;")); 
+                        }).start();
+                    });
+                } else {
+                    showError("Invalid Code.");
+                }
+            } else {
+                // Login Flow (Keep existing logic)
+                if (response.contains("LOGIN_SUCCESS")) {
+                    String[] parts = response.split(" ");
+                    String username = (parts.length > 1) ? parts[parts.length - 1] : "User";
+                    loadChat(username);
+                } else {
+                    showError("Invalid Code.");
+                }
+            }
+        }, host);
+    }
+
+    // --- 4. FORGOT PASSWORD ---
+    private void handleSendOtp() {
         String email = otpEmailField.getText().trim();
-        if(email.isEmpty()) { showError("Enter Email"); return; }
+        String host = ipField.getText().trim();
+        if(host.isEmpty()) host = "localhost";
 
-        runTask(socket -> {
-            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            out.println(Protocol.CLIENT_PREFIX + Protocol.REQUEST_LOGIN_OTP + " " + email);
-            String resp = in.readLine();
-
-            if (resp != null && resp.contains("OTP_SENT")) {
-                String code = promptCode("Login Verification", "Enter code sent to " + email);
-                if(code != null) {
-                    out.println(Protocol.CLIENT_PREFIX + Protocol.VERIFY_LOGIN_OTP + " " + email + " " + code);
-                    String loginResp = in.readLine();
-                    if(loginResp != null && loginResp.startsWith(Protocol.SERVER_PREFIX + Protocol.LOGIN_SUCCESS)) {
-                        String username = loginResp.split(" ")[1];
-                        Platform.runLater(() -> loadChat(socket, username, "otp-session"));
-                    } else {
-                        showError("Invalid Code");
-                        socket.close();
-                    }
-                }
-            } else {
-                showError("Email not found");
-                socket.close();
-            }
-        });
+        connectAndExecute("C:REQUEST_LOGIN_OTP " + email, response -> {
+            if (response.contains("OTP_SENT")) {
+                Platform.runLater(() -> {
+                    otpStep1Box.setVisible(false); otpStep1Box.setManaged(false);
+                    otpStep2Box.setVisible(true); otpStep2Box.setManaged(true);
+                });
+            } else { showError("Error: " + response); }
+        }, host);
     }
 
-    // In LoginController.java
-    private void loadChat(Socket socket, String user, String pass) {
-        try {
-            socket.close(); // Close the login socket so ChatClient can start a fresh one
-            
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("chat.fxml"));
-            Parent root = loader.load();
-            
-            ChatController controller = loader.getController();
-            controller.setServerInfo(getHost(), 5555);
-            controller.setAutoLogin(user, pass);
-            
-            // Get the current window
-            Stage stage = (Stage) loginBtn.getScene().getWindow();
-            
-            Scene scene = new Scene(root);
-            
-            // Add CSS
-            String css = this.getClass().getResource("styles.css").toExternalForm();
-            scene.getStylesheets().add(css);
+    // --- NETWORKING HELPER ---
+    private interface ResponseHandler { void handle(String response); }
 
-            stage.setScene(scene);
-            stage.setTitle("JavaChat - " + user);
+    private void connectAndExecute(String command, ResponseHandler handler, String host) {
+        new Thread(() -> {
+            try (Socket socket = new Socket(host, serverPort);
+                 PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+                 BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+                out.println(command);
+                String response = in.readLine();
+                if (response != null) Platform.runLater(() -> handler.handle(response));
+            } catch (IOException e) {
+                Platform.runLater(() -> showError("Connection Error: " + e.getMessage()));
+            }
+        }).start();
+    }
 
-            // --- FIX FOR THE BUGGED WINDOW ---
-            stage.setMaximized(false); // 1. Un-maximize first
-            stage.setWidth(1024);      // 2. Set a safe default size
-            stage.setHeight(768);
-            stage.centerOnScreen();    // 3. Center it
-            stage.setMaximized(true);  // 4. Re-maximize forcefully
-            // ---------------------------------
-
-        } catch (IOException e) { 
-            e.printStackTrace(); 
+    private void showError(String msg) {
+        if (globalErrorLabel != null) {
+            globalErrorLabel.setText(msg);
+            globalErrorLabel.setVisible(true);
+            new Thread(() -> {
+                try { Thread.sleep(3000); } catch (InterruptedException e) {}
+                Platform.runLater(() -> globalErrorLabel.setVisible(false));
+            }).start();
         }
     }
 
-    private String promptCode(String title, String content) {
-        final String[] res = {null};
-        java.util.concurrent.CountDownLatch latch = new java.util.concurrent.CountDownLatch(1);
-        Platform.runLater(() -> {
-            TextInputDialog td = new TextInputDialog();
-            td.setTitle(title); td.setContentText(content);
-            td.showAndWait().ifPresent(c -> res[0] = c);
-            latch.countDown();
-        });
-        try { latch.await(); } catch(Exception e) {}
-        return res[0];
-    }
+    // --- LOAD CHAT & STYLING ---
+    // --- LOAD CHAT & FORCE FULL SCREEN ---
+    private void loadChat(String username) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("chat.fxml"));
+            Parent root = loader.load();
 
-    private void runTask(SocketTask task) {
-        String targetHost = getHost(); // Read from UI
-        new Thread(() -> {
+            // 1. Setup Controller
+            Object controller = loader.getController();
             try {
-                Socket s = new Socket(targetHost, PORT);
-                task.run(s);
-            } catch (Exception e) { showError("Connection Failed to " + targetHost); }
-        }).start();
+                controller.getClass().getMethod("setServerInfo", String.class, int.class)
+                          .invoke(controller, serverHost, serverPort);
+                controller.getClass().getMethod("setAutoLogin", String.class, String.class)
+                          .invoke(controller, username, "OTP_ACCESS");
+            } catch (Exception e) { System.out.println("Error init chat: " + e.getMessage()); }
+
+            // 2. Switch Scene
+            Stage stage = (Stage) loginBtn.getScene().getWindow();
+            Scene scene = new Scene(root);
+            
+            // 3. Apply CSS
+            try {
+                String css = this.getClass().getResource("styles.css").toExternalForm();
+                scene.getStylesheets().add(css);
+            } catch (Exception e) { System.out.println("Warning: styles.css not found."); }
+
+            stage.setScene(scene);
+            stage.setTitle("JavaChat - " + username);
+
+            // --- THE FIX: FORCE LAYOUT REFRESH ---
+            // We quickly toggle maximize off and on. This forces JavaFX to 
+            // recalculate the anchors and stretch the chat to the corners.
+            stage.setMaximized(false);
+            stage.setMaximized(true); 
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            showError("Failed to load chat: " + e.getMessage());
+        }
     }
-    
-    interface SocketTask { void run(Socket s) throws Exception; }
 }
